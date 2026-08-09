@@ -86,6 +86,10 @@
     .lede { font-size: 19px; line-height: 1.6; color: var(--text-2); }
     p { font-size: 16.5px; line-height: 1.65; color: var(--text-2); }
     figure img, section > img { border-radius: 12px; border: 1px solid var(--line); }
+    figure video {
+      display: block; width: 100%; max-width: 620px; height: auto;
+      border-radius: 12px; border: 1px solid var(--line); background: #000;
+    }
     figcaption { font-family: var(--mono); font-size: 13px; color: var(--text-4); margin-top: 10px; line-height: 1.7; }
     code {
       font-family: var(--mono); font-size: 14px; color: var(--text-1);
@@ -267,6 +271,13 @@
       <img src="/images/fig-overview-centered.webp?v=12" width="1320" height="742"
            alt="The in-lens launcher composited over a photograph of a campsite">
       <figcaption>The simulated display over a real scene. The launcher shown here is the simulator's own; your app takes the same panel.</figcaption>
+    </figure>
+
+    <figure id="demo">
+      <video src="/media/wasd-demo.mp4" poster="/media/wasd-demo-poster.jpg"
+             controls playsinline preload="none" width="1080" height="1080"
+             aria-label="Screen recording of WASD in use"></video>
+      <figcaption>A minute of it in use: loading an app, switching scenes, and recording the result. Sound on. Also <a href="https://youtube.com/shorts/5pBoF9u8kD0">on YouTube</a>.</figcaption>
     </figure>
 
     <div class="grid-3">

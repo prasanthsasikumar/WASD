@@ -4,6 +4,8 @@
 
 Preview any web app the way it looks on the display of Meta Ray-Ban Display glasses. In the browser, no hardware.
 
+[**wasd.tools**](https://wasd.tools/) &middot; [one minute of it in use](https://youtube.com/shorts/5pBoF9u8kD0)
+
 ![The simulated display over a real scene](images/fig-overview-centered.webp)
 
 ## Why it exists
