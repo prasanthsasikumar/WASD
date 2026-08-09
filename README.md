@@ -2,7 +2,7 @@
 
 **W**eb **A**pps **S**imulator for **D**isplay.
 
-Preview any web app the way it looks on the heads-up display of Meta Ray-Ban Display glasses. In the browser, no hardware.
+Preview any web app the way it looks on the display of Meta Ray-Ban Display glasses. In the browser, no hardware.
 
 ![The simulated display over a real scene](images/fig-overview-centered.webp)
 
