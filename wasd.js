@@ -195,6 +195,19 @@
   let activeClip  = 0;
   let sceneFit    = 'contain'; // 'contain' | 'cover'
 
+  /* Which layout we are in. Must match the mobile @media selector in
+     wasd.css, or the JS will size the display for a sheet the CSS has not
+     made, or leave a landscape phone with the desktop panel. */
+  const MOBILE_MQ  = '(max-width: 768px), (max-height: 500px) and (pointer: coarse)';
+  const mobileMQL  = window.matchMedia(MOBILE_MQ);
+  const isMobile   = () => mobileMQL.matches;
+  // Where the display sat before the phone layout took it over, so widening
+  // a window back past the breakpoint returns it rather than stranding it.
+  let desktopPlacement = null;
+  // Set once the user picks Fill or Whole by hand; after that the phone
+  // layout stops overriding the choice on every sheet toggle.
+  let fitChosenByUser = false;
+
   /* ── Display geometry ─────────────────────────────────────────── */
   // Split into a pure visual mover and the user-facing setter so the capture
   // path can re-centre the display without disturbing the saved position.
@@ -224,34 +237,101 @@
     updateAngularReadout();
   }
 
+  /* How much of the layout viewport the browser's own chrome is covering.
+     On iOS the toolbar overlays the bottom of the layout viewport and
+     position: fixed keeps anchoring to the larger box, which walks the
+     bottom sheet off the screen. Publishing the gap as a custom property
+     lets the sheet and the exit button sit on the visible edge instead.
+     Everywhere else this is 0 and nothing moves. */
+  function syncViewportInset() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const layoutH = document.documentElement.clientHeight || window.innerHeight;
+    const inset = Math.max(0, Math.round(layoutH - vv.height - vv.offsetTop));
+    document.documentElement.style.setProperty('--vv-offset', inset + 'px');
+  }
+
   /* Phones get their own defaults. The scene fills the screen rather than
      letterboxing, because a portrait clip inside a taller portrait viewport
      leaves black bands that the display would otherwise sit on top of, and
      the panel is sized from the viewport instead of a fixed 300px, which was
      three quarters of the width on a small phone. */
   function applyMobileLayout() {
-    setSceneFit('cover');
+    if (!isMobile()) return;
+    if (desktopPlacement === null) {
+      desktopPlacement = { x: dispX, y: dispY, px: displayPx, fit: sceneFit };
+    }
+    // Fill is only the phone default. Once Whole has been picked deliberately
+    // the choice has to survive a sheet toggle, which calls this on every tap.
+    if (!fitChosenByUser) setSceneFit('cover');
+
     const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    // Measure against what is actually on screen, not the layout viewport:
+    // mobile browser chrome can cover a hundred-odd pixels of the bottom, and
+    // sizing the display to a strip that is partly behind the toolbar is what
+    // leaves the HUD stranded against the top edge.
+    const layoutH  = document.documentElement.clientHeight || window.innerHeight;
+    const vv       = window.visualViewport;
+    const visTop   = vv ? Math.max(0, Math.round(vv.offsetTop)) : 0;
+    const visH     = vv ? Math.min(Math.round(vv.height), layoutH) : layoutH;
     // The bottom sheet covers the lower part of the stage, so the display has
     // to fit the strip above it, not the whole viewport. In presentation mode
-    // the sheet is gone and the whole screen is available.
-    const sheet = document.getElementById('sidebar');
-    const sheetH = document.body.classList.contains('fullscreen-sim') ? 0
-                                                                     : sheet.offsetHeight;
-    const avail = Math.max(160, vh - sheetH);
+    // the sheet is gone and the whole screen is available. The sheet's own
+    // max-height already accounts for the chrome inset, so measuring it is
+    // enough; clamping it here would under-report and overlap the display.
+    const sheet  = document.getElementById('sidebar');
+    const sheetH = document.body.classList.contains('fullscreen-sim')
+      ? 0 : Math.min(sheet.offsetHeight, visH);
+    const avail = Math.max(160, visH - sheetH);
     const byWidth  = vw * 0.72;
     const byHeight = (avail - 28) / (NATIVE_H / NATIVE_W); // keep it inside the strip
     applyScale(Math.max(180, Math.min(360, Math.round(Math.min(byWidth, byHeight)))));
-    setDisplayPos(50, Math.round((avail / 2) / vh * 100));
+    // top is a percentage of the layout viewport, so the visible strip has to
+    // be offset back into that coordinate space.
+    setDisplayPos(50, Math.round((visTop + avail / 2) / layoutH * 100));
+  }
+
+  // Crossing the breakpoint either way: hand the display to the phone layout,
+  // or give it back the position it had before the phone layout claimed it.
+  mobileMQL.addEventListener('change', e => {
+    if (e.matches) { applyMobileLayout(); return; }
+    if (!desktopPlacement) return;
+    applyScale(desktopPlacement.px);
+    setDisplayPos(desktopPlacement.x, desktopPlacement.y);
+    // Fill is imposed by the phone layout, so undo it on the way out unless
+    // the fit was picked by hand, in which case the choice outranks both.
+    if (!fitChosenByUser) setSceneFit(desktopPlacement.fit);
+  });
+
+  // Rotating, the URL bar collapsing, or the software keyboard opening all
+  // change the strip the display has to fit. Coalesced, because iOS fires
+  // these in bursts mid-scroll.
+  let mobileLayoutTimer = null;
+  function scheduleMobileLayout() {
+    clearTimeout(mobileLayoutTimer);
+    mobileLayoutTimer = setTimeout(() => {
+      if (!isMobile()) return;
+      // A capture owns the display's position and size until it finishes.
+      if (recState) return;
+      // The keyboard shrinking the viewport is not a layout change: reflowing
+      // here would shrink the display out from under whoever is typing a URL.
+      const el = document.activeElement;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) return;
+      applyMobileLayout();
+    }, 120);
+  }
+  window.addEventListener('resize', scheduleMobileLayout);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      syncViewportInset(); scheduleMobileLayout();
+    });
+    window.visualViewport.addEventListener('scroll', syncViewportInset);
   }
 
   // Collapsing a group changes the sheet height, and so the strip above it.
   document.querySelectorAll('.side-nav .nav-group').forEach(g =>
     g.addEventListener('toggle', () => {
-      if (window.matchMedia('(max-width: 768px)').matches) {
-        setTimeout(applyMobileLayout, 60);
-      }
+      if (isMobile()) setTimeout(applyMobileLayout, 60);
     }));
 
   // Position the display for capture. The output frame (see CAPTURE_MODES) is
@@ -869,7 +949,9 @@
   }
   fitSeg.addEventListener('click', e => {
     const b = e.target.closest('button[data-fit]');
-    if (b) setSceneFit(b.dataset.fit);
+    if (!b) return;
+    fitChosenByUser = true;   // stop the phone layout resetting it to Fill
+    setSceneFit(b.dataset.fit);
   });
 
   dropZone.addEventListener('click', () => fileInput.click());
@@ -1072,7 +1154,7 @@
     }
     // Showing or hiding the sheet changes how much stage is visible, so the
     // phone layout has to be recomputed once the toggle has settled.
-    if (window.matchMedia('(max-width: 768px)').matches) {
+    if (isMobile()) {
       setTimeout(applyMobileLayout, 60);
     }
   }
@@ -1126,7 +1208,7 @@
 
   // Mobile: tapping the scene (anywhere outside the sidebar) collapses the bottom sheet
   document.addEventListener('click', (e) => {
-    if (!window.matchMedia('(max-width: 768px)').matches) return;
+    if (!isMobile()) return;
     if (document.body.classList.contains('fullscreen-sim')) return;
     const sidebarEl = document.getElementById('sidebar');
     if (sidebarEl && !sidebarEl.contains(e.target)) {
@@ -1138,7 +1220,7 @@
   // stopPropagation prevents the tap-to-hide document handler from
   // immediately re-triggering fullscreen after we close it.
   placeholder.addEventListener('click', (e) => {
-    if (window.matchMedia('(max-width: 768px)').matches &&
+    if (isMobile() &&
         document.body.classList.contains('fullscreen-sim')) {
       e.stopPropagation();
       setFullscreenSim(false);
@@ -1826,7 +1908,7 @@
   setSceneFit(sceneFit);
   // Rotating a phone changes which dimension constrains the panel.
   window.addEventListener('orientationchange', () => {
-    if (window.matchMedia('(max-width: 768px)').matches) setTimeout(applyMobileLayout, 250);
+    if (isMobile()) setTimeout(applyMobileLayout, 250);
   });
 
   buildAppChips();
@@ -1845,7 +1927,8 @@
   setCaptureMode(storedCapMode || 'pov');
   // Mobile has no placement controls, so the display is sized and placed to
   // suit the screen it lands on.
-  if (window.matchMedia('(max-width: 768px)').matches) {
+  syncViewportInset();
+  if (isMobile()) {
     applyMobileLayout();
   } else {
     setDisplayPos(dispX, dispY);

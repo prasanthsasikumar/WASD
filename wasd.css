@@ -729,9 +729,17 @@ body.recording #stop-recording-btn:hover { opacity: 1; pointer-events: auto; }
 .icon-mobile { display: none; }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   MOBILE (≤ 768px)
+   MOBILE (≤ 768px, or any touch device too short for the desktop layout)
+
+   The second clause catches phones in landscape: an iPhone Pro Max turned
+   sideways is 814px wide, so a width-only query hands it the desktop layout
+   inside 380px of height, where the fixed panel eats half the width and the
+   footage is squeezed into a pillarboxed strip. `pointer: coarse` keeps a
+   short desktop window (mouse, fine pointer) out of it.
+
+   Keep this selector in sync with MOBILE_MQ in wasd.js.
    ────────────────────────────────────────────────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 768px), (max-height: 500px) and (pointer: coarse) {
   .side-header { padding: 14px 20px; }
   .nav-group { padding: 12px 20px; }
   .nav-group-label { margin-bottom: 8px; }
@@ -739,11 +747,21 @@ body.recording #stop-recording-btn:hover { opacity: 1; pointer-events: auto; }
   #share-cta { padding: 12px 20px 14px; }
 
   /* Panel becomes a bottom sheet, out of the flex flow so the stage fills
-     the screen behind it. */
+     the screen behind it.
+
+     --vv-offset is the slice of the layout viewport that the browser's own
+     chrome is currently covering, measured from visualViewport in JS. iOS
+     re-anchors position: fixed to the *large* viewport as the toolbar moves,
+     so a plain bottom: 0 drops the sheet off the bottom of the screen with
+     no way to get it back. Defaults to 0, which is every other browser. */
   #sidebar {
-    position: fixed; bottom: 0; left: 0; right: 0;
+    position: fixed; bottom: var(--vv-offset, 0px); left: 0; right: 0;
     width: 100%; min-width: 0; max-width: none;
-    height: auto; max-height: 65dvh; overflow-y: auto;
+    /* 65% of the screen, less whatever the browser chrome is already taking,
+       so the sheet never grows into the part of the stage that is still
+       visible. --vv-offset is 0 everywhere but iOS, where this is a no-op. */
+    height: auto; overflow-y: auto;
+    max-height: calc(65dvh - var(--vv-offset, 0px));
     border-radius: 16px 16px 0 0;
     border-left: none; border-top: 1px solid var(--line);
     box-shadow: 0 -4px 24px rgba(0,0,0,0.5); z-index: 300;
@@ -759,6 +777,14 @@ body.recording #stop-recording-btn:hover { opacity: 1; pointer-events: auto; }
   #hide-sidebar-btn .icon-mobile, #exit-fullscreen-btn .icon-mobile { display: flex; }
 
   body.fullscreen-sim #exit-fullscreen-btn {
-    position: fixed; top: auto; left: auto; bottom: 28px; right: 20px;
+    position: fixed; top: auto; left: auto;
+    bottom: calc(28px + var(--vv-offset, 0px)); right: 20px;
   }
+}
+
+/* A phone on its side has ~430px of height to spend. 65% of that leaves the
+   display below its 180px floor, where the labels stop being readable, so
+   the sheet gets a smaller share and the stage keeps the rest. */
+@media (max-width: 900px) and (orientation: landscape) and (pointer: coarse) {
+  #sidebar { max-height: calc(52dvh - var(--vv-offset, 0px)); }
 }
