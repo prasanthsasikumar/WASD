@@ -31,7 +31,7 @@ Raise the ambient level and watch the same design stop working:
 - **In-lens launcher.** The display runs a small keyboard-driven OS: six apps, moved through with W A S D or the arrows, ENTER to open, ESC for home.
 - **Any URL.** Load your own app into the Web App slot; it stays live and interactive inside the panel.
 - **Real optics.** Display luminance (300 to 2000 nits) and ambient illuminance (50 to 30 000 lux) as separate quantities, with the additive contrast ratio they produce. Usable above 3:1, marginal down to 1.5:1, lost below that.
-- **21 scenes**, plus anything you drop in or link to, with darkness, blur, and a choice of filling the view or showing the whole frame as shot.
+- **20 scenes**, plus anything you drop in or link to, with darkness, blur, and a choice of filling the view or showing the whole frame as shot.
 - **Capture and record** in two framings: 16:9 point of view, or 1:1 like the glasses' own recorder.
 - **QR handoff** to open an app on real glasses, and deep links that restore the whole setup.
 

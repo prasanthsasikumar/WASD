@@ -127,7 +127,6 @@
   const BG_PRESETS = [
     { name: 'City Sidewalk', file: 'background/city-sidewalk.mp4' },
     { name: 'Cooking',       file: 'background/cooking.mp4'       },
-    { name: 'Driving',       file: 'background/driving.mp4'       },
     { name: 'Street Walk',   file: 'background/street-walk.mp4'   },
     { name: 'Promenade',     file: 'background/promenade.mp4'     },
     { name: 'Coffee',        file: 'background/coffee.mp4'        },

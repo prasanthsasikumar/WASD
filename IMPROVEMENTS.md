@@ -89,7 +89,7 @@ This is where the tool could become genuinely authoritative rather than merely i
 - ~~**`og-image.png` is 832KB**: larger than all the code combined.~~ **Resolved.** Re-cut from the simulator itself as `og-image.jpg`, 61 KB, and rebranded to WASD.
 - ~~**Ten autoplaying MP4s with no `preload` strategy.**~~ **Partly resolved.** Scene tiles are static JPEG posters (248 KB for all 21) instead of 21 `<video preload="metadata">` elements, the initial clip has a `poster`, and clips are capped at 12 s / ~1.6 MB average. Still worth doing: WebM/AV1 alongside MP4.
 - **Google Fonts is render-blocking** despite the `preconnect` hints. Self-host Inter and set `font-display: swap`.
-- **Manual cache busting** via `wasd.css?v=11` and `wasd.js?v=10` will drift the moment someone forgets to bump one. Use content hashes from a build step, or set proper immutable cache headers.
+- **Manual cache busting will drift.** Immutable headers on `/background/` and `/images/` meant an edited clip or figure kept serving the old bytes under the same URL, which bit twice: a recut figure and a replaced scene both looked unchanged. Those paths now use `max-age=3600, must-revalidate`, so an edit is visible within the hour at the cost of a conditional request. Content-hashed filenames from a build step would let immutable come back.
 
 ---
 
