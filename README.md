@@ -8,9 +8,15 @@ Preview any web app the way it looks on the heads-up display of Meta Ray-Ban Dis
 
 ## Why it exists
 
-A waveguide display *adds* light to the world. Pure black emits nothing, so it renders as clear glass, and dark text disappears entirely. Most web apps ported to glasses are unreadable in daylight for exactly this reason.
+I wore a pair of Meta Ray-Ban Display glasses daily for three months and built a set of apps on them. The ideas were never the bottleneck. The loop was: to find out whether a layout actually reads, you have to put it on the glasses, walk outside, and squint at it. That is a miserable feedback cycle when you are arguing with yourself about type sizes.
 
-WASD composites your app with `mix-blend-mode: plus-lighter` over first-person footage, so you see the problem in about five seconds.
+So this is the tool I wanted. It replays a design in a specific place and lighting condition, then records it, which matters as much as the preview does. I work in academia, and being able to hand someone a video of exactly what a wearer sees is often worth more than describing it.
+
+Every background clip was shot on the glasses themselves over those three months, on the east and west coasts of the US. That is why the framing sits at a wearer's height rather than a phone's.
+
+The optical reason any of this is necessary: a waveguide display *adds* light to the world. Pure black emits nothing, so it renders as clear glass, and dark text disappears entirely. Most web apps ported to glasses are unreadable in daylight for exactly this reason.
+
+WASD composites your app with `mix-blend-mode: plus-lighter` over that footage, so you see the problem in about five seconds.
 
 | What you design | What the wearer sees |
 | --- | --- |
