@@ -1,0 +1,65 @@
+# WASD
+
+**W**eb **A**pps **S**imulator for **D**isplay.
+
+Preview any web app the way it looks on the heads-up display of Meta Ray-Ban Display glasses. In the browser, no hardware.
+
+![The simulated display over a real scene](images/fig-overview-centered.webp)
+
+## Why it exists
+
+A waveguide display *adds* light to the world. Pure black emits nothing, so it renders as clear glass, and dark text disappears entirely. Most web apps ported to glasses are unreadable in daylight for exactly this reason.
+
+WASD composites your app with `mix-blend-mode: plus-lighter` over first-person footage, so you see the problem in about five seconds.
+
+| What you design | What the wearer sees |
+| --- | --- |
+| ![The app as designed, on black](images/fig-design.webp) | ![The same frame on the glasses](images/fig-wearer.webp) |
+
+Raise the ambient level and watch the same design stop working:
+
+![The same frame at three ambient levels](images/fig-scenes.webp)
+
+## Features
+
+- **In-lens launcher.** The display runs a small keyboard-driven OS: six apps, moved through with W A S D or the arrows, ENTER to open, ESC for home.
+- **Any URL.** Load your own app into the Web App slot; it stays live and interactive inside the panel.
+- **Real optics.** Display luminance (300 to 2000 nits) and ambient illuminance (50 to 30 000 lux) as separate quantities, with the additive contrast ratio they produce. Usable above 3:1, marginal down to 1.5:1, lost below that.
+- **21 scenes**, plus anything you drop in or link to, with darkness, blur, and a choice of filling the view or showing the whole frame as shot.
+- **Capture and record** in two framings: 16:9 point of view, or 1:1 like the glasses' own recorder.
+- **QR handoff** to open an app on real glasses, and deep links that restore the whole setup.
+
+## Running it
+
+Static apart from one serverless function. No build step, no dependencies.
+
+```bash
+python3 -m http.server 8000
+# then open http://localhost:8000
+```
+
+The framing pre-flight (`api/can-frame.js`) needs Vercel. Without it the app simply frames the URL as before.
+
+## Layout
+
+```
+index.html    Shell: stage on the left, control panel on the right
+wasd.css      Tokens and component styles
+wasd.js       Optics, launcher, capture, deep links
+api/          Serverless: the framing pre-flight
+demos/        Self-hosted demo apps
+background/   Scene clips and their poster frames
+docs/         Single-page documentation
+```
+
+## Notes
+
+The scenes are original footage shot on Ray-Ban Meta glasses. The one third-party dependency is `vendor/qrcode.min.js` (MIT). Google Fonts is the only external request at runtime.
+
+A blocked iframe cannot be detected from the page: browsers make a blocked frame indistinguishable from a working cross-origin one. That is why the framing check reads the response headers server-side.
+
+Working notes and roadmap: [`IMPROVEMENTS.md`](IMPROVEMENTS.md).
+
+## License
+
+MIT. See [LICENSE](LICENSE).

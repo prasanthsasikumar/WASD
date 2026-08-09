@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WASD: Web Apps Simulator for Meta Ray-Ban Display</title>
+  <meta name="description" content="Free browser tool to preview any web app on Meta Ray-Ban Display glasses. Test HUD placement, legibility and additive contrast. No hardware needed.">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <link rel="canonical" href="https://wasd.tools/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WASD">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:title" content="WASD: Web Apps Simulator for Meta Ray-Ban Display">
+  <meta property="og:description" content="Free browser tool to preview any web app on Meta Ray-Ban Display glasses. Test HUD placement, legibility and additive contrast. No hardware needed.">
+  <meta property="og:image" content="https://wasd.tools/og-image.jpg">
+  <meta property="og:url" content="https://wasd.tools/">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:title" content="WASD: Web Apps Simulator for Meta Ray-Ban Display">
+  <meta property="twitter:description" content="Free browser tool to preview any web app on Meta Ray-Ban Display glasses. Test HUD placement, legibility and additive contrast. No hardware needed.">
+  <meta property="twitter:image" content="https://wasd.tools/og-image.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" href="/favicon.svg?v=5" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png?v=5" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=5">
+  <link rel="stylesheet" href="wasd.css">
+  <script defer src="/vendor/qrcode.min.js"></script>
+  <script defer src="wasd.js"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "WASD",
+    "alternateName": "Web Apps Simulator for Display",
+    "url": "https://wasd.tools/",
+    "description": "Preview any web app the way it appears on the heads-up display of Meta Ray-Ban Display glasses. Test HUD placement, legibility and additive contrast in the browser, with no hardware.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any modern browser",
+    "browserRequirements": "Requires a Chromium-based browser for capture and recording",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-L6VNKHCPLF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-L6VNKHCPLF');
+  </script>
+</head>
+<body>
+
+<a href="#sim-viewport" class="skip-link">Skip to simulator</a>
+
+<!-- Left: the stage. Scene footage with the virtual display floating over it. -->
+<main id="sim-viewport">
+  <div id="scene">
+    <img id="bg-img" alt="" style="display:none">
+    <video id="bg-vid" loop muted autoplay playsinline preload="none" poster="background/posters/city-sidewalk.jpg" src="background/city-sidewalk.mp4"></video>
+  </div>
+
+  <!-- Shown only when the playlist has been emptied. -->
+  <div id="stage-empty" hidden>
+    <div class="se-eyebrow">POV FOOTAGE</div>
+    <div class="se-title">Drop your trip clips anywhere</div>
+    <div class="se-sub">MP4 / MOV / WEBM, or add a URL in the panel</div>
+  </div>
+
+  <div id="vignette" aria-hidden="true"></div>
+
+  <!-- The virtual display. mix-blend-mode: plus-lighter on this element is the
+       actual waveguide simulation; see wasd.css. -->
+  <div id="display-wrap">
+    <div class="wg-frame">
+      <div class="wg-artifacts" aria-hidden="true"></div>
+
+      <!-- Everything inside is authored at 600x450 and scaled to fit. -->
+      <div class="wg-stage" id="wg-stage">
+
+        <section class="wg-app" id="app-home">
+          <div class="hm-clock">
+            <span id="hm-time">00:00</span>
+            <span id="hm-date" class="hm-date">&nbsp;</span>
+          </div>
+          <div class="hm-grid" id="hm-grid" role="menu" aria-label="Applications"></div>
+          <div class="hm-hint">WASD move &nbsp;&middot;&nbsp; ENTER open</div>
+        </section>
+
+        <section class="wg-app" id="app-captions" hidden>
+          <div class="cap-head"><span class="dot"></span>LIVE CAPTIONS: EN &rarr; EN</div>
+          <div class="cap-prev" id="cap-prev"></div>
+          <div class="cap-line" id="cap-line"></div>
+        </section>
+
+        <section class="wg-app" id="app-music" hidden>
+          <div class="ov-eyebrow">NOW PLAYING</div>
+          <div class="mu-meta">
+            <div class="mu-title">Golden Hour Drive</div>
+            <div class="mu-artist">Pacific Coast Tapes</div>
+          </div>
+          <div class="mu-bar"><i id="mu-fill"></i></div>
+          <div class="mu-times"><span id="mu-time">0:47</span><span>3:34</span></div>
+          <div class="mu-state"><span id="mu-state">&#9654; playing</span><em>ENTER play/pause</em></div>
+        </section>
+
+        <section class="wg-app" id="app-nav" hidden>
+          <div class="nv-arrow" id="nv-arrow">&#8599;</div>
+          <div class="nv-dist"><span id="nv-dist">400</span> ft</div>
+          <div class="nv-street" id="nv-street">Turn right on Canyon Rd</div>
+          <div class="nv-eta">ETA 12 min &middot; 2.4 mi</div>
+        </section>
+
+        <section class="wg-app" id="app-timer" hidden>
+          <div class="ov-eyebrow">STOPWATCH</div>
+          <div class="tm-text" id="tm-text">00:00.0</div>
+          <div class="tm-hint">ENTER start/stop &middot; R reset</div>
+        </section>
+
+        <section class="wg-app" id="app-prompter" hidden>
+          <div class="pr-scroll" id="pr-scroll">Welcome, everyone, and thanks for being here. What you are watching is real point-of-view footage shot entirely on camera glasses. The overlay in the corner is a simulated in-lens display. Every app on it is a real web app, running live in this page. Use the keyboard to move focus, open apps, and drive the interface, exactly the interactions we are prototyping for heads-up displays. Small glanceable surfaces demand ruthless economy: one idea per screen, big type, high contrast. This simulator is how we test that before anything ships to glass.</div>
+        </section>
+
+        <section class="wg-app" id="app-web" hidden>
+          <div id="wg-placeholder">
+            <div class="ph-glyph" aria-hidden="true">://</div>
+            <div class="ph-text">Paste an app URL<br>in the panel</div>
+          </div>
+          <iframe id="app-iframe" src="about:blank" title="Simulated web app"
+                  sandbox="allow-scripts allow-forms allow-popups allow-pointer-lock"></iframe>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-chips">
+    <span class="chip" id="clip-label">no footage loaded</span>
+    <span class="chip">ESC home</span>
+  </div>
+
+  <div id="load-error">App blocked iframe embedding. Try opening in a tab instead</div>
+
+  <button id="exit-fullscreen-btn" type="button" title="Show panel" aria-label="Show panel">
+    <svg class="icon-desktop" width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="2" y="3" width="12" height="10" rx="1.5"></rect><line x1="10" y1="3" x2="10" y2="13"></line><polyline points="7 6 5 8 7 10"></polyline>
+    </svg>
+    <svg class="icon-mobile" width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polyline points="4 10 8 6 12 10"></polyline>
+    </svg>
+  </button>
+
+  <button id="stop-recording-btn" type="button" title="Stop recording" aria-label="Stop recording">
+    <span class="stop-dot" aria-hidden="true"></span><span class="stop-label">Stop Recording</span>
+  </button>
+
+  <div id="capture-toast" role="status" aria-live="polite">
+    <span class="ct-icon" aria-hidden="true"></span>
+    <div class="ct-text"><span class="ct-title"></span><span class="ct-detail"></span></div>
+  </div>
+</main>
+
+<!-- Right: control panel -->
+<aside id="sidebar" aria-label="Controls">
+
+  <header class="side-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="#63e6a8"><g transform="translate(2.692 1.499) scale(0.8462)"><path fill-rule="evenodd" d="
+    M1.9 6.9h20.2c1 0 1.9.8 1.9 1.9v2.6c0 3.2-2.4 5.8-5.6 6.2l-2.5.3c-2.1.2-3.7-.9-4.3-2.8l-.4-1.3c-.1-.3-.2-.5-.4-.5s-.3.2-.4.5l-.4 1.3c-.6 1.9-2.2 3-4.3 2.8l-2.5-.3C.4 17.2-2 14.6-2 11.4V8.8c0-1 .8-1.9 1.9-1.9z
+    M2.3 9c-.3 0-.6.3-.6.6v1.6c0 2.1 1.6 3.8 3.7 4.1l2.3.3c1 .1 1.7-.3 2-1.3l.6-2.1c.1-.4.2-.9.2-1.3 0-1-.8-1.8-1.8-1.8zm11.6 0c-1 0-1.8.8-1.8 1.8 0 .5.1.9.2 1.3l.6 2.1c.3 1 1 1.4 2 1.3l2.3-.3c2.1-.3 3.7-2 3.7-4.1V9.6c0-.3-.3-.6-.6-.6z
+    M3.5 10.3h4.3v2.4H3.5z"/></g></svg>
+      </span>
+      <span class="brand-text">
+        <h1>WASD</h1>
+        <span class="brand-sub">WEB APP SIM FOR DISPLAY</span>
+      </span>
+    </div>
+    <button id="hide-sidebar-btn" type="button" title="Hide panel (H)" aria-label="Hide panel">
+      <svg class="icon-desktop" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="2" y="3" width="12" height="10" rx="1.5"></rect><line x1="10" y1="3" x2="10" y2="13"></line><polyline points="5 6 7 8 5 10"></polyline>
+      </svg>
+      <svg class="icon-mobile" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="4 6 8 10 12 6"></polyline>
+      </svg>
+    </button>
+  </header>
+
+  <nav class="side-nav" aria-label="Simulator controls">
+
+<details class="nav-group" open>
+      <summary class="nav-group-label">Apps</summary>
+      <div class="nav-group-body">
+        <div id="app-chips" role="toolbar" aria-label="Applications"></div>
+        <div id="web-bar">
+          <input id="url-input" type="url" placeholder="https:// app url" autocomplete="off" spellcheck="false">
+          <button class="pill-btn" id="load-btn">Load</button>
+        </div>
+        <button id="app-see-more" type="button" class="link-btn" hidden>see more</button>
+      </div>
+    </details>
+
+<details class="nav-group" open>
+      <summary class="nav-group-label">Footage</summary>
+      <div class="nav-group-body">
+        <button type="button" id="drop-zone">Add clips: click or drop files</button>
+        <div id="url-bar">
+          <input id="clip-url-input" type="url" placeholder="https:// video url" autocomplete="off" spellcheck="false">
+          <button class="pill-btn" id="clip-add-btn">ADD</button>
+        </div>
+        <div id="playlist" role="listbox" aria-label="Clips"></div>
+        <button id="bg-see-more" type="button" class="link-btn">see more</button>
+        <div class="control-row">
+          <label>Frame</label>
+          <div class="seg-control" id="fit-seg" role="radiogroup" aria-label="Scene framing">
+            <button type="button" data-fit="cover" role="radio" aria-checked="false">Fill</button>
+            <button type="button" data-fit="contain" class="active" role="radio" aria-checked="true">Whole</button>
+          </div>
+        </div>
+        <div class="slider-row-pair">
+          <label for="sl-bg-darkness">Dark</label>
+          <input type="range" id="sl-bg-darkness" min="0" max="90" value="10">
+          <span id="lbl-bg-darkness">10%</span>
+          <label for="sl-bg-blur">Blur</label>
+          <input type="range" id="sl-bg-blur" min="0" max="12" value="0">
+          <span id="lbl-bg-blur">0px</span>
+        </div>
+      </div>
+    </details>
+
+<details class="nav-group" id="placement-group">
+      <summary class="nav-group-label">Display</summary>
+      <div class="nav-group-body">
+        <div class="slider-row">
+          <label for="sl-size">Size</label>
+          <input type="range" id="sl-size" min="200" max="560" value="380" step="10">
+          <span id="lbl-size">380px</span>
+        </div>
+        <div class="slider-row">
+          <label for="sl-posx">Position X</label>
+          <input type="range" id="sl-posx" min="20" max="85" value="68">
+          <span id="lbl-posx">68%</span>
+        </div>
+        <div class="slider-row">
+          <label for="sl-posy">Position Y</label>
+          <input type="range" id="sl-posy" min="20" max="80" value="40">
+          <span id="lbl-posy">40%</span>
+        </div>
+
+        <!-- The physical model is kept rather than the design's percentages:
+             nits and lux are quantities that can be checked against hardware,
+             and they produce the contrast ratio shown in the header. -->
+        <div class="optics-unit">
+          <div class="optics-head">
+            <span class="optics-title">Optics</span>
+            <span id="lbl-contrast" class="optics-ratio" title="Ratio of display luminance to ambient luminance reflected off the scene">7.3 : 1</span>
+          </div>
+          <div class="optics-body">
+            <div class="optics-row">
+              <label for="sl-nits">Display</label>
+              <input type="range" id="sl-nits" min="300" max="2000" value="1000" step="50" aria-valuetext="1000 nits">
+              <span id="lbl-nits">1000 nits</span>
+            </div>
+            <div class="optics-row">
+              <label for="sl-ambient">Ambient</label>
+              <input type="range" id="sl-ambient" min="50" max="30000" value="500" step="50" aria-valuetext="500 lux">
+              <span id="lbl-ambient">500 lux</span>
+            </div>
+            <div class="optics-derived">
+              <span>Angular size</span><span id="lbl-angular">~12.0&deg;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <label>Artifacts</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-artifacts"><span class="toggle-track"></span>
+            <span class="toggle-label">Simulate</span>
+          </label>
+        </div>
+        <div class="control-row">
+          <label>Glow</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-glow" checked><span class="toggle-track"></span>
+            <span class="toggle-label">Bloom</span>
+          </label>
+        </div>
+        <div class="control-row">
+          <label>Vignette</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-vignette" checked><span class="toggle-track"></span>
+            <span class="toggle-label">Lens</span>
+          </label>
+        </div>
+      </div>
+    </details>
+
+  </nav>
+
+  <div id="share-cta">
+    <div class="cta-label">Output</div>
+    <div id="fmt-popover" hidden role="dialog" aria-labelledby="fmt-pop-title">
+      <div class="fmt-pop-head">
+        <span class="fmt-pop-title" id="fmt-pop-title">Capture as&hellip;</span>
+        <button id="fmt-pop-close" class="fmt-pop-close" type="button" aria-label="Cancel">
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <line x1="2" y1="2" x2="12" y2="12"></line><line x1="12" y1="2" x2="2" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="fmt-list" id="capture-fmt">
+        <button type="button" class="fmt-row" data-cap="pov">
+          <span class="fmt-diagram" aria-hidden="true">
+            <svg width="44" height="30" viewBox="0 0 44 30" fill="none">
+              <rect x="1" y="6" width="42" height="18" rx="2.5" stroke="currentColor" stroke-width="1.5" opacity="0.5"></rect>
+              <rect x="28" y="10" width="10" height="10" rx="1.8" fill="currentColor"></rect>
+            </svg>
+          </span>
+          <span class="fmt-body">
+            <span class="fmt-title">Point of View</span>
+            <span class="fmt-sub">Widescreen 16:9. HUD to the right, as you see it through the glasses.</span>
+          </span>
+        </button>
+        <button type="button" class="fmt-row" data-cap="native">
+          <span class="fmt-diagram" aria-hidden="true">
+            <svg width="44" height="30" viewBox="0 0 44 30" fill="none">
+              <rect x="8" y="1" width="28" height="28" rx="2.5" stroke="currentColor" stroke-width="1.5" opacity="0.5"></rect>
+              <rect x="17" y="10" width="10" height="10" rx="1.8" fill="currentColor"></rect>
+            </svg>
+          </span>
+          <span class="fmt-body">
+            <span class="fmt-title">Native Recording</span>
+            <span class="fmt-sub">Square 1:1. HUD centred, like the glasses' own screen recorder.</span>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <div class="cta-btns">
+      <button id="screenshot-btn" type="button" title="Capture the viewport as a PNG">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5.5 4.5 L6.5 3 L9.5 3 L10.5 4.5"></path><rect x="1.5" y="4.5" width="13" height="9" rx="1.5"></rect><circle cx="8" cy="9" r="2.5"></circle>
+        </svg>
+        <span class="btn-label">Capture</span>
+      </button>
+      <button id="record-btn" type="button" title="Record the viewport as a video (Shift+R)">
+        <span class="rec-icon" aria-hidden="true"></span><span class="rec-label">Record</span>
+      </button>
+      <button id="qr-btn" type="button" title="Open this app on your glasses" aria-label="Show QR code">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M1 1h6v6H1V1zm1 1v4h4V2H2z"></path><rect x="3" y="3" width="2" height="2"></rect>
+          <path fill-rule="evenodd" d="M9 1h6v6H9V1zm1 1v4h4V2h-4z"></path><rect x="11" y="3" width="2" height="2"></rect>
+          <path fill-rule="evenodd" d="M1 9h6v6H1V9zm1 1v4h4v-4H2z"></path><rect x="3" y="11" width="2" height="2"></rect>
+          <rect x="9" y="9" width="2" height="2"></rect><rect x="12" y="9" width="2" height="2"></rect>
+          <rect x="9" y="12" width="2" height="2"></rect><rect x="12" y="12" width="2" height="2"></rect>
+        </svg>
+        <span class="btn-label">QR Code</span>
+      </button>
+      <button id="share-btn" type="button">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="13" cy="3" r="1.6"></circle><circle cx="13" cy="13" r="1.6"></circle><circle cx="3" cy="8" r="1.6"></circle>
+          <line x1="4.6" y1="7.1" x2="11.4" y2="4.1"></line><line x1="4.6" y1="8.9" x2="11.4" y2="11.9"></line>
+        </svg>
+        <span class="btn-label">Share</span>
+      </button>
+    </div>
+
+    <div class="keys-help">
+      <div class="keys-label">Keys</div>
+      <dl class="keys-grid">
+        <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>move focus</dd>
+        <dt><kbd>Enter</kbd></dt><dd>open, or act</dd>
+        <dt><kbd>Esc</kbd></dt><dd>home</dd>
+        <dt><kbd>R</kbd></dt><dd>reset, in Timer</dd>
+        <dt><kbd>H</kbd></dt><dd>hide panel</dd>
+        <dt><kbd>&#8679;</kbd><kbd>R</kbd></dt><dd>record</dd>
+      </dl>
+      <div class="keys-note">Arrow keys move focus too.</div>
+    </div>
+    <div class="side-footer">
+      <p class="side-intro"><a href="/docs/">Learn more about WASD</a></p>
+    </div>
+    <div id="share-toast">Link copied to clipboard!</div>
+  </div>
+
+</aside>
+
+<input type="file" id="file-input" accept="video/*,image/*" multiple style="display:none">
+
+<div id="qr-modal" class="modal-backdrop" hidden>
+  <div class="modal-card qr-modal-card" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
+    <button id="qr-close" class="modal-close" aria-label="Close">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <line x1="2" y1="2" x2="12" y2="12"></line><line x1="12" y1="2" x2="2" y2="12"></line>
+      </svg>
+    </button>
+    <div class="qr-modal-header">
+      <h2 id="qr-modal-title" class="modal-title">Scan QR Code</h2>
+      <div class="seg-control qr-mode-seg" id="qr-mode-seg" role="radiogroup" aria-label="QR code mode">
+        <button type="button" data-mode="glasses" class="active" role="radio" aria-checked="true">On Glasses</button>
+        <button type="button" data-mode="simulator" role="radio" aria-checked="false">On Phone</button>
+      </div>
+    </div>
+    <div id="qr-output"></div>
+    <div class="qr-instr-wrap">
+      <p id="qr-instr-glasses" class="qr-instruction">Wearing your Ray-Ban glasses, say <em>"Hey Meta, scan this QR code"</em> and follow the push notification on your phone to open the app on your display. Needs Developer Mode enabled in the Meta AI app.</p>
+      <p id="qr-instr-simulator" class="qr-instruction" hidden>Scan with your phone camera to open <strong>WASD</strong> on your phone with this app pre-loaded, great for sharing or testing without the glasses.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

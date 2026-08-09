@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docs: display glasses web apps, simulated in your browser | WASD</title>
+  <meta name="description" content="How web apps work on Meta Ray-Ban Display glasses, how WASD simulates the additive waveguide, and how to design something that survives daylight.">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <link rel="canonical" href="https://wasd.tools/docs/">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://wasd.tools/docs/">
+  <meta property="og:site_name" content="WASD">
+  <meta property="og:title" content="Docs: display glasses web apps, simulated in your browser | WASD">
+  <meta property="og:description" content="How web apps work on Meta Ray-Ban Display glasses, and how to design something that survives daylight.">
+  <meta property="og:image" content="https://wasd.tools/og-image.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" href="/favicon.svg?v=5" type="image/svg+xml">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --accent: #63e6a8;
+      --accent-dim: #2c4a3b;
+      --accent-bg: #16211c;
+      --bg: #0a0b0c;
+      --card: #101214;
+      --line: #1e2226;
+      --line-2: #2a2e33;
+      --text-1: #e8eaec;
+      --text-2: #aab2ba;
+      --text-3: #98a2ab;
+      --text-4: #8b949d;
+      --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    html { scroll-behavior: smooth; }
+    /* Anchors sit under the sticky bar without this. */
+    section[id] { scroll-margin-top: 72px; }
+    body {
+      background: var(--bg); color: var(--text-1);
+      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: #8df0c2; }
+    img { max-width: 100%; height: auto; display: block; }
+    strong { color: var(--text-1); }
+
+    .skip-link {
+      position: fixed; top: -100%; left: 12px; z-index: 99;
+      padding: 10px 16px; background: var(--accent); color: #06251a;
+      border-radius: 6px; font-weight: 700; font-size: 13px;
+    }
+    .skip-link:focus { top: 12px; }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    /* Top bar */
+    .bar {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; padding: 14px 28px;
+      background: rgba(10,11,12,0.92); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+    }
+    .bar-brand { display: flex; align-items: center; gap: 12px; }
+    .bar-brand svg { display: block; }
+    .bar-name { font-size: 20px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-1); }
+    .bar-kicker { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: var(--text-4); }
+    .bar-nav { display: flex; align-items: center; gap: 22px; font-family: var(--mono); font-size: 12px; }
+    .bar-nav a { color: var(--text-2); }
+    .bar-nav a:hover { color: var(--text-1); }
+    .bar-cta {
+      padding: 8px 14px; border: 1px solid var(--accent-dim); border-radius: 6px;
+      background: var(--accent-bg); color: var(--accent) !important; white-space: nowrap;
+    }
+    .bar-cta:hover { border-color: var(--accent); }
+
+    main { max-width: 1400px; margin: 0 auto; padding: 64px 40px 120px; }
+    section { display: flex; flex-direction: column; gap: 20px; }
+    section + section { padding-top: 56px; border-top: 1px solid var(--line); margin-top: 8px; }
+    section:first-of-type { padding-bottom: 8px; }
+
+    .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--accent); }
+    h1 { font-size: 54px; font-weight: 700; line-height: 1.1; letter-spacing: -0.015em; text-wrap: balance; max-width: 30ch; }
+    h2 { font-size: 32px; font-weight: 700; line-height: 1.2; }
+    .lede { font-size: 19px; line-height: 1.6; color: var(--text-2); }
+    p { font-size: 16.5px; line-height: 1.65; color: var(--text-2); }
+    figure img, section > img { border-radius: 12px; border: 1px solid var(--line); }
+    figcaption { font-family: var(--mono); font-size: 13px; color: var(--text-4); margin-top: 10px; line-height: 1.7; }
+    code {
+      font-family: var(--mono); font-size: 14px; color: var(--text-1);
+      background: #16191c; padding: 1px 5px; border-radius: 4px;
+    }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .pair figcaption {
+      font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--text-3); text-align: center;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .card {
+      padding: 16px 18px; border-radius: 10px; background: var(--card);
+      border: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px;
+    }
+    .stat-val { font-size: 24px; font-weight: 700; color: var(--accent); }
+    .stat-lbl { font-family: var(--mono); font-size: 11.5px; color: var(--text-3); }
+    .card p { font-size: 14px; line-height: 1.5; color: var(--text-2); }
+
+
+    .step { flex-direction: row; gap: 14px; }
+    .step .n { font-family: var(--mono); font-size: 14px; color: var(--accent); flex: 0 0 auto; }
+    .step p { font-size: 14px; line-height: 1.55; }
+
+    /* The rules are a decision, not a comparison: one dominant panel to
+       follow, one compressed strip to avoid. Every rule carries a small
+       demonstration of itself, drawn in CSS so it stays sharp and costs
+       no requests. */
+    .rules { display: flex; flex-direction: column; gap: 14px; }
+
+    .do-panel {
+      background: #101a15; border: 1px solid var(--accent-dim);
+      border-radius: 12px; padding: 20px 22px 22px;
+    }
+    .rules-head {
+      font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.16em;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+    .do-panel .rules-head { color: var(--accent); }
+    .do-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+    .rule { display: flex; flex-direction: column; gap: 10px; }
+    .rule-name { font-size: 15.5px; font-weight: 700; color: var(--text-1); line-height: 1.25; }
+    .rule-note { font-size: 13px; color: var(--text-2); line-height: 1.45; }
+
+    /* Demonstration tiles. Each one is the rule, performed. */
+    .demo-tile {
+      height: 58px; border-radius: 7px; background: #000;
+      border: 1px solid #23282c; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      padding: 0 10px;
+    }
+    .d-bar { height: 5px; border-radius: 3px; background: var(--accent); width: 70%; }
+    .d-bar.thin { height: 1px; background: #6d757c; width: 70%; }
+    .d-dot { width: 13px; height: 13px; border-radius: 50%; }
+    .d-type { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+    .d-type.thin { font-size: 12px; font-weight: 300; color: #8a9096; }
+    .d-stack { display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: center; }
+    .d-line { height: 4px; border-radius: 2px; background: #eaf3ff; }
+    .d-grid6 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; width: 78%; }
+    .d-grid6 i { height: 8px; border-radius: 2px; background: #4a5057; display: block; }
+    /* A stand-in for the world, with the black panel drawn on top of it:
+       the dashed edge is the only thing marking where the panel sits. */
+    .demo-tile.world {
+      background: repeating-linear-gradient(115deg, #2b3138 0 7px, #1b2026 7px 14px);
+    }
+    .d-ghost {
+      width: 74%; height: 34px; border-radius: 5px;
+      background: #000; border: 1px dashed #6f787f;
+    }
+
+    .avoid-strip {
+      border: 1px solid #33272a; border-radius: 12px;
+      padding: 14px 18px 15px; opacity: 0.78;
+    }
+    .avoid-strip .rules-head { color: #e86a5e; margin-bottom: 12px; }
+    .avoid-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .avoid-item { display: flex; align-items: center; gap: 10px; }
+    .avoid-vis {
+      flex: 0 0 46px; height: 22px; border-radius: 4px; background: #000;
+      border: 1px solid #23282c; display: flex; align-items: center;
+      justify-content: center; gap: 3px; padding: 0 5px;
+    }
+    .avoid-text { font-size: 13.5px; color: var(--text-2); line-height: 1.35; }
+
+    .takeaway {
+      font-size: 17px; font-weight: 700; color: var(--accent);
+      padding-top: 4px;
+    }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--mono); font-size: 12px; }
+    .chips a {
+      padding: 8px 14px; border: 1px solid var(--line-2); border-radius: 6px;
+      background: #16191c; color: var(--text-2);
+    }
+    .chips a:hover { border-color: var(--accent); color: var(--accent); }
+
+    .note { font-family: var(--mono); font-size: 13px; line-height: 1.75; color: var(--text-4); }
+
+    .demo { display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); }
+    .demo-glyph { font-size: 26px; font-weight: 700; color: var(--accent); line-height: 1; }
+    .demo-glyph.mono { font-family: var(--mono); }
+    .demo-name { font-size: 17px; font-weight: 700; color: var(--text-1); }
+    .demo p { font-size: 13.5px; line-height: 1.55; flex: 1; max-width: none; }
+    .demo-links { display: flex; gap: 12px; font-family: var(--mono); font-size: 12px; }
+    .demo-links a.alt { color: var(--text-3); }
+    .demo-links a.alt:hover { color: var(--accent); }
+
+    footer {
+      max-width: 1400px; margin: 0 auto; padding: 0 40px 64px;
+      font-family: var(--mono); font-size: 12px; color: var(--text-4);
+      display: flex; gap: 18px; flex-wrap: wrap;
+    }
+    footer a { color: var(--text-3); }
+
+    @media (max-width: 1080px) {
+      .do-grid { grid-template-columns: repeat(3, 1fr); }
+      .avoid-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 720px) {
+      .bar { padding: 12px 18px; }
+      .bar-nav { gap: 14px; font-size: 11px; }
+      /* The page is one scroll, so the section links are the expendable part;
+         the simulator CTA is not. */
+      .bar-nav .hide-sm { display: none; }
+      .bar-kicker { display: none; }
+      main { padding: 40px 18px 80px; }
+      footer { padding: 0 18px 48px; }
+      h1 { font-size: 32px; max-width: none; }
+      .lede { font-size: 17px; }
+      h2 { font-size: 25px; }
+      .grid-3, .grid-2, .pair { grid-template-columns: 1fr; }
+      .do-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .avoid-grid { grid-template-columns: 1fr; gap: 10px; }
+      .takeaway { font-size: 15px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-L6VNKHCPLF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-L6VNKHCPLF');
+  </script>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<div class="bar">
+  <a class="bar-brand" href="/" aria-label="WASD home">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="#63e6a8" aria-hidden="true"><g transform="translate(2.692 1.499) scale(0.8462)"><path fill-rule="evenodd" d="
+    M1.9 6.9h20.2c1 0 1.9.8 1.9 1.9v2.6c0 3.2-2.4 5.8-5.6 6.2l-2.5.3c-2.1.2-3.7-.9-4.3-2.8l-.4-1.3c-.1-.3-.2-.5-.4-.5s-.3.2-.4.5l-.4 1.3c-.6 1.9-2.2 3-4.3 2.8l-2.5-.3C.4 17.2-2 14.6-2 11.4V8.8c0-1 .8-1.9 1.9-1.9z
+    M2.3 9c-.3 0-.6.3-.6.6v1.6c0 2.1 1.6 3.8 3.7 4.1l2.3.3c1 .1 1.7-.3 2-1.3l.6-2.1c.1-.4.2-.9.2-1.3 0-1-.8-1.8-1.8-1.8zm11.6 0c-1 0-1.8.8-1.8 1.8 0 .5.1.9.2 1.3l.6 2.1c.3 1 1 1.4 2 1.3l2.3-.3c2.1-.3 3.7-2 3.7-4.1V9.6c0-.3-.3-.6-.6-.6z
+    M3.5 10.3h4.3v2.4H3.5z"/></g></svg>
+    <span class="bar-name">WASD</span>
+    <span class="bar-kicker">DOCS</span>
+  </a>
+  <nav class="bar-nav" aria-label="Sections">
+    <a class="hide-sm" href="#how">How it works</a>
+    <a class="hide-sm" href="#create">Create</a>
+    <a class="hide-sm" href="#examples">Examples</a>
+    <a class="bar-cta" href="/">OPEN SIMULATOR &rarr;</a>
+  </nav>
+</div>
+
+<main id="main">
+
+  <!-- 01 ─────────────────────────────────────────────────────────── -->
+  <section>
+    <div class="kicker">01 / WHAT IT IS</div>
+    <h1>Display glasses web apps, simulated in your browser</h1>
+    <p class="lede">Point WASD at any public URL and it renders the page the way a wearer of optical waveguide glasses sees it: added light over a real scene. Free, in-browser, no hardware.</p>
+
+    <figure>
+      <img src="/images/fig-overview-centered.webp?v=12" width="1320" height="742"
+           alt="The in-lens launcher composited over a photograph of a campsite">
+      <figcaption>The simulated display over a real scene. The launcher shown here is the simulator's own; your app takes the same panel.</figcaption>
+    </figure>
+
+    <div class="grid-3">
+      <div class="card"><div class="stat-val">600&times;450</div><div class="stat-lbl">DISPLAY VIEWPORT</div></div>
+      <div class="card"><div class="stat-val">HTTPS</div><div class="stat-lbl">PUBLIC URL REQUIRED</div></div>
+      <div class="card"><div class="stat-val">D-PAD</div><div class="stat-lbl">ARROWS + ENTER INPUT</div></div>
+    </div>
+
+
+  </section>
+
+  <!-- 02 ─────────────────────────────────────────────────────────── -->
+  <section id="how">
+    <div class="kicker">02 / HOW IT WORKS</div>
+    <h2>Added light, not pixels</h2>
+    <p>Your app loads in an <code>&lt;iframe&gt;</code> and is composited with <code>mix-blend-mode: plus-lighter</code>, the same arithmetic a waveguide performs when it injects light into the eye.</p>
+
+    <div class="pair">
+      <figure>
+        <img src="/images/fig-design.webp?v=1" width="1300" height="732"
+             alt="The navigation app as designed, on a black background">
+        <figcaption>What you design</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/fig-wearer.webp?v=1" width="1300" height="732"
+             alt="The same frame composited additively over a train platform">
+        <figcaption>What the wearer sees</figcaption>
+      </figure>
+    </div>
+
+    <div class="grid-2">
+      <div class="card step">
+        <div class="n">1</div>
+        <p><strong>Load a URL.</strong> Any public page. It stays fully interactive inside the display.</p>
+      </div>
+      <div class="card step">
+        <div class="n">2</div>
+        <p><strong>Set placement.</strong> Size, position and the optics model. Defaults match the monocular right lens.</p>
+      </div>
+      <div class="card step">
+        <div class="n">3</div>
+        <p><strong>Change the scene.</strong> Lighting and motion decide contrast. Test until something breaks.</p>
+      </div>
+      <div class="card step">
+        <div class="n">4</div>
+        <p><strong>Capture, record, share, QR.</strong> A still, a video, a link that restores your setup, or open it on real glasses.</p>
+      </div>
+    </div>
+
+    <figure>
+      <img src="/images/fig-scenes.webp?v=6" width="1320" height="280"
+           alt="The same frame at 400, 6000 and 22000 lux, the display fading as ambient light rises">
+      <figcaption>One frame, one design, three ambient levels. Contrast is a property of the environment, not of your design alone.</figcaption>
+    </figure>
+
+    <p>The optics panel reports the <strong>additive contrast ratio</strong> from display luminance and ambient illuminance. As a rule of thumb: below roughly 3:1 the panel is fighting the scene, and below 1.5:1 it has lost.</p>
+
+    <div class="note">NOT MODELLED: rainbow fringing, eyebox falloff, focal distance, glare, and binocular rivalry. Verify spec-critical work on hardware.</div>
+  </section>
+
+  <!-- 03 ─────────────────────────────────────────────────────────── -->
+  <section id="create">
+    <div class="kicker">03 / CREATE</div>
+    <h2>Design in light, not ink</h2>
+    <p>A web app for the glasses is a standard web page. Meta's documentation covers setup, input and publishing; this covers the part that is genuinely different.</p>
+
+    <div class="rules">
+
+      <div class="do-panel">
+        <div class="rules-head">&#10003; Design for daylight</div>
+        <div class="do-grid">
+
+          <div class="rule">
+            <div class="demo-tile world">
+              <span class="d-ghost"></span>
+            </div>
+            <div class="rule-name">Pure black</div>
+            <div class="rule-note">Emits nothing, so it reads as clear glass.</div>
+          </div>
+
+          <div class="rule">
+            <div class="demo-tile"><span class="d-bar"></span></div>
+            <div class="rule-name">Bright strokes</div>
+            <div class="rule-note">Only what you light up reaches the eye.</div>
+          </div>
+
+          <div class="rule">
+            <div class="demo-tile">
+              <span class="d-dot" style="background:#63e6a8"></span>
+              <span class="d-dot" style="background:#5ee0ff"></span>
+              <span class="d-dot" style="background:#eaf3ff"></span>
+            </div>
+            <div class="rule-name">Cyan &amp; green win</div>
+            <div class="rule-note">They carry furthest through the combiner.</div>
+          </div>
+
+          <div class="rule">
+            <div class="demo-tile"><span class="d-type">Aa</span></div>
+            <div class="rule-name">Bold beats thin</div>
+            <div class="rule-note">Heavy weights, generous spacing.</div>
+          </div>
+
+          <div class="rule">
+            <div class="demo-tile">
+              <span class="d-stack">
+                <i class="d-line" style="width:62%"></i>
+                <i class="d-line" style="width:38%;opacity:0.55"></i>
+              </span>
+            </div>
+            <div class="rule-name">One idea</div>
+            <div class="rule-note">Assume a one-second glance, off to one side.</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="avoid-strip">
+        <div class="rules-head">&#10007; Avoid</div>
+        <div class="avoid-grid">
+          <div class="avoid-item">
+            <span class="avoid-vis"><span style="width:100%;height:10px;border-radius:2px;background:linear-gradient(90deg,#7d8791,#0a0b0c)"></span></span>
+            <span class="avoid-text">Gradients die</span>
+          </div>
+          <div class="avoid-item">
+            <span class="avoid-vis"><span class="d-bar thin"></span></span>
+            <span class="avoid-text">Thin is invisible</span>
+          </div>
+          <div class="avoid-item">
+            <span class="avoid-vis">
+              <span class="d-dot" style="width:9px;height:9px;background:#e0342c"></span>
+              <span class="d-dot" style="width:9px;height:9px;background:#1a2fd6"></span>
+            </span>
+            <span class="avoid-text">Red &amp; deep blue wash out</span>
+          </div>
+          <div class="avoid-item">
+            <span class="avoid-vis"><span class="d-grid6"><i></i><i></i><i></i><i></i></span></span>
+            <span class="avoid-text">Dense is unreadable</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="takeaway">If it does not work in sunlight, it does not work.</div>
+
+    </div>
+
+    <div class="chips">
+      <a href="https://wearables.developer.meta.com/docs/develop/webapps/setup/" rel="noopener">META: SETUP &#8599;</a>
+      <a href="https://wearables.developer.meta.com/docs/develop/webapps/build/" rel="noopener">META: BUILD &#8599;</a>
+      <a href="https://github.com/facebookincubator/meta-wearables-webapp" rel="noopener">STARTER KIT &#8599;</a>
+    </div>
+
+    <div class="note">HEADS UP: sites sending <code>X-Frame-Options: DENY</code> or a strict <code>frame-ancestors</code> CSP will not render in the simulator. Deploy without those headers, or open the application directly on the glasses.</div>
+  </section>
+
+  <!-- 04 ─────────────────────────────────────────────────────────── -->
+  <section id="examples">
+    <div class="kicker">04 / EXAMPLES</div>
+    <h2>Three demos, one click each</h2>
+    <p>Served from this same origin so they always load. Black ground, bright marks, no stroke under 2px. Load one, raise Ambient, and watch what survives.</p>
+
+    <div class="grid-3">
+      <div class="demo">
+        <div class="demo-glyph">&#8599;</div>
+        <div class="demo-name">Navigation</div>
+        <p>The archetypal glanceable HUD: big distance, street name, heavy arrow.</p>
+        <div class="demo-links">
+          <a href="/?url=%2Fdemos%2Fnav%2F">OPEN &#8599;</a>
+          <a class="alt" href="/demos/nav/">standalone</a>
+        </div>
+      </div>
+      <div class="demo">
+        <div class="demo-glyph mono">00</div>
+        <div class="demo-name">Timer</div>
+        <p>Countdown, progress ring, step indicator. Test it against the Cooking scene.</p>
+        <div class="demo-links">
+          <a href="/?url=%2Fdemos%2Ftimer%2F">OPEN &#8599;</a>
+          <a class="alt" href="/demos/timer/">standalone</a>
+        </div>
+      </div>
+      <div class="demo">
+        <div class="demo-glyph mono">&#9680;</div>
+        <div class="demo-name">Contrast reference</div>
+        <p>Bright-on-black keeps reading; dark-on-white disappears. Raise Ambient to watch them separate.</p>
+        <div class="demo-links">
+          <a href="/?url=%2Fdemos%2Fcontrast%2F">OPEN &#8599;</a>
+          <a class="alt" href="/demos/contrast/">standalone</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">SOURCE: each demo is one self-contained HTML file under <code>demos/</code> in the repository, with no build step and no dependencies.</div>
+  </section>
+
+</main>
+
+<footer>
+  <a href="/">Simulator</a>
+  <span>WASD: Web Apps Simulator for Display</span>
+</footer>
+
+</body>
+</html>

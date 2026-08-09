@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Demos are framed inside the simulator, not destinations in their own right.
+Disallow: /demos/
+
+Sitemap: https://wasd.tools/sitemap.xml

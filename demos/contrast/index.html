@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contrast Reference: WASD demo</title>
+<meta name="robots" content="noindex">
+<style>
+  /* A deliberate side-by-side of what survives an additive waveguide and
+     what does not. Load it in WASD and raise Ambient: the bottom half
+     disappears first, the top half keeps reading. */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+  body {
+    font-family: 'Helvetica Neue', Inter, system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+  section { flex: 1; padding: 34px 36px; display: flex; flex-direction: column; gap: 14px; }
+
+  .tag {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+  }
+
+  /* Survives: black ground, bright marks, heavy strokes */
+  .good { background: #000; }
+  .good .tag { color: #5ef08a; }
+  .good h2 { color: #fff; font-size: 40px; font-weight: 700; letter-spacing: -0.5px; }
+  .good p  { color: rgba(255,255,255,0.86); font-size: 22px; line-height: 1.4; }
+  .good .rule { height: 4px; background: #5ef08a; border-radius: 2px; width: 130px; }
+
+  /* Fails: light ground floods the view, dark ink emits nothing, hairlines vanish */
+  .bad { background: #ffffff; }
+  .bad .tag { color: #b42318; }
+  .bad h2 { color: #111; font-size: 40px; font-weight: 700; letter-spacing: -0.5px; }
+  .bad p  { color: #444; font-size: 22px; line-height: 1.4; }
+  .bad .rule { height: 1px; background: #999; width: 130px; }
+</style>
+</head>
+<body>
+  <section class="good">
+    <div class="tag">Survives</div>
+    <h2>Bright on black</h2>
+    <p>Black emits nothing, so it reads as clear glass. Only the bright marks reach the eye.</p>
+    <div class="rule"></div>
+  </section>
+
+  <section class="bad">
+    <div class="tag">Fails</div>
+    <h2>Dark on white</h2>
+    <p>White floods the scene with light and dark ink adds none, so this text goes invisible.</p>
+    <div class="rule"></div>
+  </section>
+</body>
+</html>
