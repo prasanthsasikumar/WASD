@@ -67,6 +67,54 @@
 
   /* ── Config ────────────────────────────────────────────────────── */
   const HUD_MARGIN = 48;
+
+  /* ── Device profiles ───────────────────────────────────────────────
+     Every number that belongs to a particular pair of glasses lives in
+     this one object. To add a device: copy the block below, change the
+     numbers, open a PR. Nothing else in this file knows the hardware.
+     CONTRIBUTING.md walks through it.
+
+       panel      the authored pixel grid apps are drawn on, and therefore
+                  the panel's aspect. Apps are written once at this size
+                  and scaled to whatever the stage shows.
+       fovDeg     horizontal field of view the panel subtends, used for the
+                  angular size readout.
+       eye        'right' | 'left' | 'both'. Where a monocular image sits
+                  in the wearer's view, which the Point of View capture
+                  has to match.
+       luminance  the display's own output in nits: slider range, starting
+                  value, and step.
+       recording  the device's built-in screen recorder as an output frame:
+                  its aspect, and how much of the frame height the panel
+                  fills.
+     ───────────────────────────────────────────────────────────────── */
+  const DEVICES = {
+    'meta-ray-ban-display': {
+      name:      'Meta Ray-Ban Display',
+      panel:     { w: 600, h: 450 },
+      fovDeg:    20,
+      eye:       'right',
+      luminance: { min: 300, max: 2000, start: 1000, step: 50 },
+      recording: { aspect: 1, ratio: 0.70 }, // the device exports ~460×460
+    },
+  };
+  const DEFAULT_DEVICE = 'meta-ray-ban-display';
+
+  // ?device= selects a profile, so a second one is usable the day it lands
+  // rather than waiting on a picker in the panel. An unknown key falls back
+  // to the default instead of blanking the stage.
+  const requestedDevice = new URLSearchParams(location.search).get('device');
+  const DEVICE = DEVICES[requestedDevice] || DEVICES[DEFAULT_DEVICE];
+
+  // The stylesheet draws the panel from these, so a profile with a different
+  // pixel grid needs no CSS edit. Unitless: CSS multiplies by 1px. Named
+  // --device-*, not --panel-*: --panel-w is already the control panel's width.
+  document.documentElement.style.setProperty('--device-w', DEVICE.panel.w);
+  document.documentElement.style.setProperty('--device-h', DEVICE.panel.h);
+
+  // Where a monocular image sits across the wearer's field of view.
+  const EYE_CENTER = { right: 0.75, left: 0.25, both: 0.5 };
+
   // Two capture formats for screenshots / recordings. Each defines the
   // cropped OUTPUT frame; the live on-screen HUD is unaffected (that's the
   // "Placement" controls). During a capture the HUD is briefly repositioned
@@ -75,15 +123,14 @@
   //   aspect  → frame width / height
   //   centerX → HUD center's horizontal position in the frame (0.5 = dead centre)
   //
-  // 'pov' (Point of View) mimics looking through the real Meta Ray-Ban
-  // Display: a 16:9 field of view with the HUD projected onto the RIGHT half
-  // only (the device drives the right eye). ratio 0.45 keeps the HUD a modest
-  // panel while still letting the default Medium HUD's frame fit common laptop
-  // widths (≳1420px) without black bars: smaller values letterbox sooner.
+  // 'pov' (Point of View) mimics looking through the glasses: a 16:9 field of
+  // view with the HUD on the side the device drives. ratio 0.45 keeps the HUD
+  // a modest panel while still letting the default Medium HUD's frame fit
+  // common laptop widths (≳1420px) without black bars: smaller values
+  // letterbox sooner.
   //
-  // 'native' (Native Recording) reproduces the glasses' built-in screen
-  // recorder: a square 1:1 frame with the HUD centred (the device exports
-  // ~460×460). Tune `ratio` to taste: larger fills more of the square.
+  // 'native' (Native Recording) reproduces the device's built-in screen
+  // recorder, so its shape comes from the profile.
   //
   // User-facing names and descriptions live in the #fmt-popover rows in
   // index.html; the keys here match their data-cap values.
@@ -91,11 +138,11 @@
     pov: {
       ratio:   0.45,
       aspect:  16 / 9,
-      centerX: 0.75,
+      centerX: EYE_CENTER[DEVICE.eye] || 0.5,
     },
     native: {
-      ratio:   0.70,
-      aspect:  1,
+      ratio:   DEVICE.recording.ratio,
+      aspect:  DEVICE.recording.aspect,
       centerX: 0.5,
     },
   };
@@ -184,10 +231,10 @@
   const ctDetail      = captureToast.querySelector('.ct-detail');
 
   /* ── State ─────────────────────────────────────────────────────── */
-  // The display is 600x450 authored pixels, drawn at `displayPx` wide and
-  // positioned as a percentage of the stage. Replaces the old three-anchor
-  // model; see the WASD design doc.
-  const NATIVE_W = 600, NATIVE_H = 450;
+  // The display is the active profile's authored pixels, drawn at `displayPx`
+  // wide and positioned as a percentage of the stage. Replaces the old
+  // three-anchor model; see the WASD design doc.
+  const NATIVE_W = DEVICE.panel.w, NATIVE_H = DEVICE.panel.h;
   let displayPx   = 380;                // rendered width in CSS px
   let scaleRatio  = displayPx / NATIVE_W;
   let dispX       = 68;                 // percent across the stage
@@ -1042,8 +1089,13 @@
   // Physical display model: perceived HUD opacity is derived from display
   // nits and ambient lux rather than an arbitrary percentage. High ambient
   // light washes out the waveguide image: this models that relationship.
-  // Default: 1000 nits (typical waveguide) in 500 lux (office lighting).
-  const DEVICE_FOV_DEG = 20; // Meta Ray-Ban Display approximate field of view
+  // Default ambient: 500 lux (office lighting). The nits range and starting
+  // point belong to the device, so they come from the active profile rather
+  // than the markup.
+  slNits.min   = DEVICE.luminance.min;
+  slNits.max   = DEVICE.luminance.max;
+  slNits.step  = DEVICE.luminance.step;
+  slNits.value = DEVICE.luminance.start;
 
   // Ambient illuminance (lux) falling on a scene becomes luminance (nits)
   // reflected back toward the eye. lux/π is that conversion for a perfect
@@ -1060,7 +1112,7 @@
   }
 
   function updateAngularReadout() {
-    const angularW = (DEVICE_FOV_DEG * scaleRatio).toFixed(1);
+    const angularW = (DEVICE.fovDeg * scaleRatio).toFixed(1);
     lblAngular.textContent = `~${angularW}°`;
   }
 
@@ -1232,6 +1284,8 @@
     const p = new URLSearchParams();
     const appUrl = urlInput.value.trim();
     if (appUrl) p.set('url', appUrl);
+    // Only when it is not the default, so ordinary links stay short.
+    if (DEVICE !== DEVICES[DEFAULT_DEVICE]) p.set('device', requestedDevice);
     p.set('x', dispX);
     p.set('y', dispY);
     p.set('size',     displayPx);
@@ -1248,6 +1302,10 @@
 
   function readStateFromURL() {
     const p = new URLSearchParams(location.search);
+    // ?device= is read at boot rather than restored here, and on its own it is
+    // not shared state: someone trying a second profile should land on the
+    // normal page with the controls, not in fullscreen sim.
+    p.delete('device');
     if (!p.toString()) return; // nothing to restore
 
     if (p.has('x') || p.has('y')) {
@@ -1263,14 +1321,15 @@
       const cap = p.get('cap');
       if (CAPTURE_MODES[cap]) setCaptureMode(cap);
     }
+    const lum = DEVICE.luminance;
     if (p.has('bright')) {
-      // Legacy brightness param: map to nits (roughly: 30%→300 nits, 100%→2000 nits)
+      // Legacy brightness param: 30% is the dimmest the device goes, 100% the
+      // brightest, mapped onto whatever range the profile declares.
       const v = Math.max(30, Math.min(100, parseInt(p.get('bright'), 10)));
-      const nits = Math.round(300 + (v - 30) / 70 * 1700);
-      slNits.value = nits;
+      slNits.value = Math.round(lum.min + (v - 30) / 70 * (lum.max - lum.min));
     }
     if (p.has('nits')) {
-      slNits.value = Math.max(300, Math.min(2000, parseInt(p.get('nits'), 10)));
+      slNits.value = Math.max(lum.min, Math.min(lum.max, parseInt(p.get('nits'), 10)));
     }
     if (p.has('ambient')) {
       slAmbient.value = Math.max(50, Math.min(30000, parseInt(p.get('ambient'), 10)));

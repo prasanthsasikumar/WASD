@@ -53,12 +53,24 @@ The framing pre-flight (`api/can-frame.js`) needs Vercel. Without it the app sim
 ```
 index.html    Shell: stage on the left, control panel on the right
 wasd.css      Tokens and component styles
-wasd.js       Optics, launcher, capture, deep links
+wasd.js       Device profiles, optics, launcher, capture, deep links
 api/          Serverless: the framing pre-flight
 demos/        Self-hosted demo apps
 background/   Scene clips and their poster frames
 docs/         Single-page documentation
 ```
+
+## Other devices
+
+The simulation is Meta Ray-Ban Display because that is the pair I wear, but the
+device itself is one object in `wasd.js`: panel grid, field of view, which eye,
+luminance range, and the shape the built-in recorder exports. Add an entry, load
+`?device=your-key`, and the geometry, the angular readout, the brightness range and
+the capture framing all follow from it.
+
+If you own something else, that object plus a few clips shot on your own hardware is
+the whole contribution. [`CONTRIBUTING.md`](CONTRIBUTING.md) says what each number is
+and where to find it.
 
 ## Notes
 
