@@ -15,6 +15,11 @@
      the stage is never zero-sized. Unitless, multiplied by 1px below. */
   --device-w: 600;
   --device-h: 450;
+  /* The box the display is placed against: the window minus the panel. Held
+     at that size whether the panel is showing or not, so hiding it uncovers
+     more scene instead of re-placing the HUD. Phones override it below,
+     where the panel is a sheet that overlays the stage and takes no width. */
+  --stage-w: calc(100vw - var(--panel-w));
   --stage-bg: #000;
   --panel-bg: #101214;
   --body-bg: #0a0b0c;
@@ -109,7 +114,16 @@ body.no-vignette #vignette { display: none; }
    reading as transparent and the tool stops being honest. Leave it. ── */
 #display-wrap {
   position: absolute;
-  left: 68%; top: 40%;
+  /* X is measured off --stage-w rather than the live width of #sim-viewport,
+     which grows by the panel's width the moment the panel is hidden: a plain
+     percentage of it slid the display across footage that had not moved. Y
+     stays a percentage, because nothing changes the stage's height.
+     --disp-x / --disp-y are the same numbers the placement sliders carry;
+     wasd.js sets them inline. */
+  --disp-x: 68;
+  --disp-y: 40;
+  left: calc(var(--stage-w) * var(--disp-x) / 100);
+  top: calc(var(--disp-y) * 1%);
   /* First-paint size only: applyScale() sets both from the device profile as
      soon as the script runs. Height follows the panel's aspect. */
   width: 380px; height: calc(380px * var(--device-h) / var(--device-w));
@@ -749,6 +763,9 @@ body.recording #stop-recording-btn:hover { opacity: 1; pointer-events: auto; }
    Keep this selector in sync with MOBILE_MQ in wasd.js.
    ────────────────────────────────────────────────────────────────────────── */
 @media (max-width: 768px), (max-height: 500px) and (pointer: coarse) {
+  /* The sheet is out of the flex flow, so it costs the stage no width. */
+  :root { --stage-w: 100vw; }
+
   .side-header { padding: 14px 20px; }
   .nav-group { padding: 12px 20px; }
   .nav-group-label { margin-bottom: 8px; }

@@ -259,8 +259,15 @@
   // Split into a pure visual mover and the user-facing setter so the capture
   // path can re-centre the display without disturbing the saved position.
   function applyDisplayPosStyles(xPct, yPct) {
-    wrap.style.left      = xPct + '%';
-    wrap.style.top       = yPct + '%';
+    // Placement goes through the custom properties the stylesheet's calc()
+    // reads, not through left/top directly: X has to be measured against the
+    // stage box rather than #sim-viewport, which widens when the panel is
+    // hidden. Clearing left/top drops any inline pair the capture path left
+    // behind and hands placement back to the stylesheet.
+    wrap.style.setProperty('--disp-x', xPct);
+    wrap.style.setProperty('--disp-y', yPct);
+    wrap.style.left      = '';
+    wrap.style.top       = '';
     wrap.style.right     = 'auto';
     wrap.style.bottom    = 'auto';
     wrap.style.transform = 'translate(-50%, -50%) translateZ(0)';
