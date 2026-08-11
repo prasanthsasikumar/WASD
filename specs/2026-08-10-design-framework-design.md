@@ -36,8 +36,11 @@ slider and watches it happen, without leaving the page or trusting the author.
 
 ### The page
 
-`docs/design/index.html`, at `/docs/design/`, its own citable URL. Same tokens,
-type and voice as `docs/`. Linked from the docs nav and from section 03.
+Section 03 of `docs/index.html`, at `/docs/#rules`. It was built first as a
+separate page at `/docs/design/` on the argument that a framework wants its own
+citable URL; that turned out to duplicate the docs page's opening physics, its
+contrast explanation and its caveats, so it was folded back in and the standalone
+URL became a redirect. One page, one argument.
 
 Seven rules, each carrying its provenance in the open:
 
@@ -87,11 +90,17 @@ illuminances therefore render identically. Rule 03's three tiles are pinned to
 which is the only choice that shows a progression rather than two identical
 frames.
 
-### Section 03 of the docs
+### What the merge removed
 
-Keeps its five tiles as the short version and gains a pointer to the full page.
-The avoid strip is removed rather than duplicated, along with the CSS only it
-used.
+The seven rules subsume section 03's five assertion tiles and the avoid strip, so
+both go along with the CSS only they used. Section 02 loses the three-ambient
+figure and the paragraph explaining the contrast bands: rule 03 now demonstrates
+both live, and the bands are stated once beside the slider. The `NOT MODELLED`
+caveat is stated once, in section 02. The conversion table becomes a subheading
+inside the rules rather than a section of its own.
+
+`/docs/design/` and `/docs/develop/` are redirect stubs pointing at `/docs/#rules`,
+matching the stubs already there for the other sections.
 
 ### Accessibility
 
@@ -119,15 +128,20 @@ Playwright, against a local server:
 - The page uses the shared optics module rather than its own copy.
 - Every deep link carries parameters the simulator accepts, and every `bg` key
   names a real clip.
+- Nothing is said twice: no avoid strip, no five-rule panel, one `NOT MODELLED`,
+  no three-ambient figure, one rules section, and every nav target resolves.
+- `/docs/design/` redirects into the docs page.
 - The simulator's own placement, capture, keyboard and mobile behaviour is
   unchanged by the extraction.
 
 ## Files
 
 - `optics.js` new, shared
-- `docs/design/index.html` new
-- `docs/design/design.js` new
-- `docs/index.html` section 03 trimmed, nav link added, dead CSS removed
+- `docs/index.html` section 03 replaced by the rules, two sections added, section
+  02 deduplicated, dead CSS removed
+- `docs/docs.js` new, the ambient control
+- `docs/design/index.html` redirect stub to `/docs/#rules`
+- `docs/develop/index.html` stub retargeted from `#create` to `#rules`
 - `wasd.js` optics functions replaced by the shared module
 - `index.html` loads `optics.js` before `wasd.js`
-- `sitemap.xml` new URL
+- `sitemap.xml` docs entry touched; no new URL, the page is one document
