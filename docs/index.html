@@ -144,14 +144,10 @@
       padding: 0 10px;
     }
     .d-bar { height: 5px; border-radius: 3px; background: var(--accent); width: 70%; }
-    .d-bar.thin { height: 1px; background: #6d757c; width: 70%; }
     .d-dot { width: 13px; height: 13px; border-radius: 50%; }
     .d-type { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
-    .d-type.thin { font-size: 12px; font-weight: 300; color: #8a9096; }
     .d-stack { display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: center; }
     .d-line { height: 4px; border-radius: 2px; background: #eaf3ff; }
-    .d-grid6 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; width: 78%; }
-    .d-grid6 i { height: 8px; border-radius: 2px; background: #4a5057; display: block; }
     /* A stand-in for the world, with the black panel drawn on top of it:
        the dashed edge is the only thing marking where the panel sits. */
     .demo-tile.world {
@@ -161,20 +157,6 @@
       width: 74%; height: 34px; border-radius: 5px;
       background: #000; border: 1px dashed #6f787f;
     }
-
-    .avoid-strip {
-      border: 1px solid #33272a; border-radius: 12px;
-      padding: 14px 18px 15px; opacity: 0.78;
-    }
-    .avoid-strip .rules-head { color: #e86a5e; margin-bottom: 12px; }
-    .avoid-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-    .avoid-item { display: flex; align-items: center; gap: 10px; }
-    .avoid-vis {
-      flex: 0 0 46px; height: 22px; border-radius: 4px; background: #000;
-      border: 1px solid #23282c; display: flex; align-items: center;
-      justify-content: center; gap: 3px; padding: 0 5px;
-    }
-    .avoid-text { font-size: 13.5px; color: var(--text-2); line-height: 1.35; }
 
     .takeaway {
       font-size: 17px; font-weight: 700; color: var(--accent);
@@ -208,7 +190,6 @@
 
     @media (max-width: 1080px) {
       .do-grid { grid-template-columns: repeat(3, 1fr); }
-      .avoid-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 720px) {
       .bar { padding: 12px 18px; }
@@ -224,7 +205,6 @@
       h2 { font-size: 25px; }
       .grid-3, .grid-2, .pair { grid-template-columns: 1fr; }
       .do-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-      .avoid-grid { grid-template-columns: 1fr; gap: 10px; }
       .takeaway { font-size: 15px; }
     }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
@@ -255,6 +235,7 @@
     <a class="hide-sm" href="#how">How it works</a>
     <a class="hide-sm" href="#create">Create</a>
     <a class="hide-sm" href="#examples">Examples</a>
+    <a class="hide-sm" href="/docs/design/">Design</a>
     <a class="bar-cta" href="/">OPEN SIMULATOR &rarr;</a>
   </nav>
 </div>
@@ -394,34 +375,11 @@
         </div>
       </div>
 
-      <div class="avoid-strip">
-        <div class="rules-head">&#10007; Avoid</div>
-        <div class="avoid-grid">
-          <div class="avoid-item">
-            <span class="avoid-vis"><span style="width:100%;height:10px;border-radius:2px;background:linear-gradient(90deg,#7d8791,#0a0b0c)"></span></span>
-            <span class="avoid-text">Gradients die</span>
-          </div>
-          <div class="avoid-item">
-            <span class="avoid-vis"><span class="d-bar thin"></span></span>
-            <span class="avoid-text">Thin is invisible</span>
-          </div>
-          <div class="avoid-item">
-            <span class="avoid-vis">
-              <span class="d-dot" style="width:9px;height:9px;background:#e0342c"></span>
-              <span class="d-dot" style="width:9px;height:9px;background:#1a2fd6"></span>
-            </span>
-            <span class="avoid-text">Red &amp; deep blue wash out</span>
-          </div>
-          <div class="avoid-item">
-            <span class="avoid-vis"><span class="d-grid6"><i></i><i></i><i></i><i></i></span></span>
-            <span class="avoid-text">Dense is unreadable</span>
-          </div>
-        </div>
-      </div>
-
       <div class="takeaway">If it does not work in sunlight, it does not work.</div>
 
     </div>
+
+    <p>Those five are the short version. The full set is seven rules, with the reasoning behind each one and a live demonstration you can break with a single slider: <a href="/docs/design/"><strong>Design for added light</strong></a>. It also covers what agent-generated interfaces will run into on these displays.</p>
 
     <div class="chips">
       <a href="https://wearables.developer.meta.com/docs/develop/webapps/setup/" rel="noopener">META: SETUP &#8599;</a>

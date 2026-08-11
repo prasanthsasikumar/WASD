@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design for added light: seven rules for transparent displays | WASD</title>
+  <meta name="description" content="Seven rules for designing on an optical waveguide, each one demonstrated live on the page. Drag the ambient slider and watch the ones your design breaks.">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <link rel="canonical" href="https://wasd.tools/docs/design/">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://wasd.tools/docs/design/">
+  <meta property="og:site_name" content="WASD">
+  <meta property="og:title" content="Design for added light: seven rules for transparent displays">
+  <meta property="og:description" content="Seven rules for designing on an optical waveguide, each one demonstrated live on the page.">
+  <meta property="og:image" content="https://wasd.tools/og-image-v2.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" href="/favicon.svg?v=5" type="image/svg+xml">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --accent: #63e6a8;
+      --accent-dim: #2c4a3b;
+      --accent-bg: #16211c;
+      --bg: #0a0b0c;
+      --card: #101214;
+      --line: #1e2226;
+      --line-2: #2a2e33;
+      --text-1: #e8eaec;
+      --text-2: #aab2ba;
+      --text-3: #98a2ab;
+      --text-4: #8b949d;
+      --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      /* Written by the ambient control. Every demonstration on the page reads
+         these two, which is what makes one slider argue the whole case. */
+      --hud-opacity: 1;
+      --world-brightness: 0.55;
+    }
+    html { scroll-behavior: smooth; }
+    section[id] { scroll-margin-top: 132px; }
+    body {
+      background: var(--bg); color: var(--text-1);
+      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: #8df0c2; }
+    img { max-width: 100%; height: auto; display: block; }
+    strong { color: var(--text-1); }
+
+    .skip-link {
+      position: fixed; top: -100%; left: 12px; z-index: 99;
+      padding: 10px 16px; background: var(--accent); color: #06251a;
+      border-radius: 6px; font-weight: 700; font-size: 13px;
+    }
+    .skip-link:focus { top: 12px; }
+    a:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    /* Top bar, identical to the docs page so the two read as one site. */
+    .bar {
+      position: sticky; top: 0; z-index: 12;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; padding: 14px 28px;
+      background: rgba(10,11,12,0.92); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+    }
+    .bar-brand { display: flex; align-items: center; gap: 12px; }
+    .bar-brand svg { display: block; }
+    .bar-name { font-size: 20px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-1); }
+    .bar-kicker { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: var(--text-4); }
+    .bar-nav { display: flex; align-items: center; gap: 22px; font-family: var(--mono); font-size: 12px; }
+    .bar-nav a { color: var(--text-2); }
+    .bar-nav a:hover { color: var(--text-1); }
+    .bar-nav a.here { color: var(--accent); }
+    .bar-cta {
+      padding: 8px 14px; border: 1px solid var(--accent-dim); border-radius: 6px;
+      background: var(--accent-bg); color: var(--accent) !important; white-space: nowrap;
+    }
+    .bar-cta:hover { border-color: var(--accent); }
+
+    main { max-width: 1400px; margin: 0 auto; padding: 56px 40px 120px; }
+    section { display: flex; flex-direction: column; gap: 20px; }
+    section + section { padding-top: 48px; border-top: 1px solid var(--line); margin-top: 8px; }
+
+    .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--accent); }
+    h1 { font-size: 54px; font-weight: 700; line-height: 1.1; letter-spacing: -0.015em; text-wrap: balance; max-width: 22ch; }
+    h2 { font-size: 30px; font-weight: 700; line-height: 1.2; }
+    .lede { font-size: 19px; line-height: 1.6; color: var(--text-2); max-width: 78ch; }
+    p { font-size: 16.5px; line-height: 1.65; color: var(--text-2); max-width: 78ch; }
+    code {
+      font-family: var(--mono); font-size: 14px; color: var(--text-1);
+      background: #16191c; padding: 1px 5px; border-radius: 4px;
+    }
+    .note { font-family: var(--mono); font-size: 13px; line-height: 1.75; color: var(--text-4); }
+
+    /* ── The ambient control ──────────────────────────────────────────
+       Sticky under the bar, because the argument only lands if the reader
+       can reach it from wherever they have scrolled to. ─────────────── */
+    .ambient {
+      position: sticky; top: 57px; z-index: 11;
+      display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+      padding: 13px 20px; border: 1px solid var(--line-2); border-radius: 10px;
+      background: rgba(16,18,20,0.94); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .amb-label {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--text-4); flex: 0 0 auto;
+    }
+    .ambient input[type=range] {
+      flex: 1 1 220px; min-width: 160px; height: 4px; -webkit-appearance: none;
+      appearance: none; background: var(--line-2); border-radius: 2px; cursor: pointer;
+    }
+    .ambient input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--accent); cursor: pointer; border: none;
+    }
+    .ambient input[type=range]::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 50%; background: var(--accent);
+      cursor: pointer; border: none;
+    }
+    .amb-read {
+      font-family: var(--mono); font-size: 13px; color: var(--text-1);
+      flex: 0 0 auto; min-width: 10ch;
+    }
+    .amb-scene { font-family: var(--mono); font-size: 12px; color: var(--text-4); flex: 0 0 auto; min-width: 16ch; }
+    .amb-ratio {
+      font-family: var(--mono); font-size: 12px; flex: 0 0 auto;
+      padding: 4px 10px; border-radius: 999px; border: 1px solid var(--accent-dim);
+      background: var(--accent-bg); color: var(--accent); min-width: 15ch; text-align: center;
+    }
+    .amb-ratio.marginal { border-color: #6a5a2a; background: #211d12; color: #e3c368; }
+    .amb-ratio.lost { border-color: #5c2f2c; background: #1f1414; color: #e86a5e; }
+
+    /* ── Rules ────────────────────────────────────────────────────────
+       One block per rule: the law, the demonstration, the way to check it
+       on real footage. ────────────────────────────────────────────── */
+    .rule-block {
+      display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: 28px; align-items: start;
+      padding: 26px 0; border-top: 1px solid var(--line);
+    }
+    .rule-block:first-of-type { border-top: none; padding-top: 8px; }
+    .rule-text { display: flex; flex-direction: column; gap: 12px; }
+    .rule-n {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em;
+      color: var(--accent); display: flex; gap: 12px; align-items: baseline;
+    }
+    .rule-src {
+      color: var(--text-4); letter-spacing: 0.1em;
+      border-left: 1px solid var(--line-2); padding-left: 12px;
+    }
+    .rule-title { font-size: 25px; font-weight: 700; line-height: 1.22; color: var(--text-1); }
+    .rule-body { font-size: 15.5px; line-height: 1.62; color: var(--text-2); }
+    .rule-check {
+      font-family: var(--mono); font-size: 12px; margin-top: 2px;
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 7px 13px; border: 1px solid var(--line-2); border-radius: 6px;
+      background: #16191c; color: var(--text-2); align-self: flex-start;
+    }
+    .rule-check:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Demonstrations ───────────────────────────────────────────────
+       Every tile is the real thing: content composited with plus-lighter
+       over a frame shot on the glasses, at the opacity the optics model
+       returns for the current ambient level. Nothing here is a mockup. ── */
+    .demos { display: grid; gap: 12px; }
+    .demos.two { grid-template-columns: 1fr 1fr; }
+    .demos.three { grid-template-columns: repeat(3, 1fr); }
+    .lab { display: flex; flex-direction: column; gap: 8px; }
+    .lab-view {
+      position: relative; aspect-ratio: 4 / 3; border-radius: 9px; overflow: hidden;
+      border: 1px solid var(--line-2); background: #000; isolation: isolate;
+    }
+    /* The world. Brightness tracks the ambient control, because a scene does
+       not stay dim while the light that washes out the panel climbs. */
+    .lab-view::before {
+      content: ''; position: absolute; inset: 0; z-index: 0;
+      background-image: var(--scene); background-size: cover; background-position: center;
+      filter: brightness(var(--world-brightness));
+    }
+    /* The panel. plus-lighter is the whole point: this is the same blend the
+       simulator uses, which is the same arithmetic the waveguide performs. */
+    .lab-hud {
+      position: absolute; inset: 0; z-index: 1;
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 14px; text-align: center;
+      mix-blend-mode: plus-lighter; opacity: var(--hud-opacity);
+      color: #f4f6f7; font-weight: 500;
+    }
+    /* "What you drew": the design canvas, not the glasses. No scene behind it
+       and no blend, because the pair only makes its point if one side is the
+       thing you actually authored. */
+    .lab-view.flat::before { background: #000; filter: none; }
+    .lab-view.flat .lab-hud { mix-blend-mode: normal; opacity: 1; }
+
+    .lab-cap {
+      font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.06em;
+      color: var(--text-4); line-height: 1.5;
+    }
+    .lab-cap b { color: var(--text-2); font-weight: 500; }
+    .lab.fails .lab-cap b { color: #e86a5e; }
+    .lab.holds .lab-cap b { color: var(--accent); }
+
+    /* Rule 1: what you drew against what arrives. */
+    .r1-card {
+      width: 78%; padding: 12px 14px; border-radius: 8px;
+      background: #000; border: 1px solid #2c3238;
+      display: flex; flex-direction: column; gap: 6px; align-items: flex-start;
+    }
+    .r1-card .t { font-size: 15px; font-weight: 700; color: #fff; }
+    .r1-card .s { font-size: 11.5px; color: #b7c0c8; }
+    .r1-bare { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; width: 78%; }
+    .r1-bare .t { font-size: 15px; font-weight: 700; color: #fff; }
+    .r1-bare .s { font-size: 11.5px; color: #b7c0c8; }
+
+    /* Rule 2: type sized in degrees. The panel is 20 degrees across 600px, so
+       one degree is 30 authored pixels; each tile stands for 10 degrees of
+       that, and the type is set at the true ratio rather than eyeballed. */
+    .r2 .lab-hud { flex-direction: column; gap: 4px; }
+    .r2-type { font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; }
+    .r2-deg { font-family: var(--mono); font-size: 10px; color: #9fb0bd; letter-spacing: 0.08em; }
+
+    /* Rule 4: colour survival. */
+    .r4-swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; width: 100%; }
+    .r4-chip {
+      border-radius: 5px; padding: 7px 4px; font-family: var(--mono);
+      font-size: 9.5px; letter-spacing: 0.04em; font-weight: 500;
+    }
+
+    /* Rule 5: a shadow adds nothing, so it is not there. A dark seat is. */
+    .r5-shadow {
+      width: 76%; padding: 13px; border-radius: 8px; background: #0d0f11;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.9); font-size: 13.5px; color: #fff;
+    }
+    .r5-seat {
+      width: 76%; padding: 13px; border-radius: 8px; background: #1b2024;
+      border: 1px solid #46525c; font-size: 13.5px; color: #fff;
+    }
+
+    /* Rule 6: arrival speed. Two notifications, same content. */
+    .r6-toast {
+      width: 82%; padding: 10px 12px; border-radius: 7px;
+      background: #171c20; border: 1px solid #3d474f;
+      display: flex; align-items: center; gap: 9px; text-align: left;
+    }
+    .r6-toast .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: 0 0 auto; }
+    .r6-toast .msg { font-size: 12.5px; color: #eef3f6; line-height: 1.3; }
+    .r6-fast { animation: r6snap 3.4s ease-in-out infinite; }
+    .r6-slow { animation: r6drift 3.4s ease-in-out infinite; }
+    @keyframes r6snap {
+      0%, 4% { opacity: 0; transform: translateY(-14px); }
+      6%, 72% { opacity: 1; transform: translateY(0); }
+      78%, 100% { opacity: 0; transform: translateY(-14px); }
+    }
+    @keyframes r6drift {
+      0% { opacity: 0; transform: translateY(-14px); }
+      58%, 72% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-8px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .r6-fast, .r6-slow { animation: none; opacity: 1; transform: none; }
+    }
+
+    /* Rule 7: how much can be read in a glance. */
+    .r7-dense { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: 88%; }
+    .r7-dense i {
+      display: block; height: 15px; border-radius: 3px;
+      background: #566068; font-style: normal;
+    }
+    .r7-one { display: flex; flex-direction: column; gap: 5px; align-items: center; }
+    .r7-one .big { font-size: 30px; font-weight: 700; color: #fff; line-height: 1; }
+    .r7-one .sub { font-family: var(--mono); font-size: 11px; color: #b7c0c8; letter-spacing: 0.06em; }
+
+    /* Conversion table for rule 2. */
+    .conv {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+      font-family: var(--mono); font-size: 12px;
+    }
+    .conv div {
+      padding: 10px 12px; border-radius: 8px; background: var(--card);
+      border: 1px solid var(--line); color: var(--text-3); line-height: 1.6;
+    }
+    .conv b { display: block; color: var(--accent); font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+
+    .takeaway { font-size: 17px; font-weight: 700; color: var(--accent); }
+
+    .sources { display: flex; flex-direction: column; gap: 10px; }
+    .sources li { font-size: 15px; line-height: 1.65; color: var(--text-2); margin-left: 18px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--mono); font-size: 12px; }
+    .chips a {
+      padding: 8px 14px; border: 1px solid var(--line-2); border-radius: 6px;
+      background: #16191c; color: var(--text-2);
+    }
+    .chips a:hover { border-color: var(--accent); color: var(--accent); }
+
+    footer {
+      max-width: 1400px; margin: 0 auto; padding: 0 40px 64px;
+      font-family: var(--mono); font-size: 12px; color: var(--text-4);
+      display: flex; gap: 18px; flex-wrap: wrap;
+    }
+    footer a { color: var(--text-3); }
+
+    @media (max-width: 1080px) {
+      .rule-block { grid-template-columns: 1fr; gap: 18px; }
+      .conv { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 720px) {
+      .bar { padding: 12px 18px; }
+      .bar-nav { gap: 14px; font-size: 11px; }
+      .bar-nav .hide-sm { display: none; }
+      .bar-kicker { display: none; }
+      main { padding: 32px 18px 80px; }
+      footer { padding: 0 18px 48px; }
+      h1 { font-size: 32px; max-width: none; }
+      .lede { font-size: 17px; }
+      h2 { font-size: 24px; }
+      .rule-title { font-size: 21px; }
+      .demos.three { grid-template-columns: 1fr; }
+      /* The control is worth more than the reading width on a phone. */
+      .ambient { gap: 10px 14px; padding: 11px 14px; }
+      .amb-scene { display: none; }
+    }
+  </style>
+  <script defer src="/optics.js"></script>
+  <script defer src="/docs/design/design.js"></script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-L6VNKHCPLF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-L6VNKHCPLF');
+  </script>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<div class="bar">
+  <a class="bar-brand" href="/" aria-label="WASD home">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="#63e6a8" aria-hidden="true"><g transform="translate(2.692 1.499) scale(0.8462)"><path fill-rule="evenodd" d="
+    M1.9 6.9h20.2c1 0 1.9.8 1.9 1.9v2.6c0 3.2-2.4 5.8-5.6 6.2l-2.5.3c-2.1.2-3.7-.9-4.3-2.8l-.4-1.3c-.1-.3-.2-.5-.4-.5s-.3.2-.4.5l-.4 1.3c-.6 1.9-2.2 3-4.3 2.8l-2.5-.3C.4 17.2-2 14.6-2 11.4V8.8c0-1 .8-1.9 1.9-1.9z
+    M2.3 9c-.3 0-.6.3-.6.6v1.6c0 2.1 1.6 3.8 3.7 4.1l2.3.3c1 .1 1.7-.3 2-1.3l.6-2.1c.1-.4.2-.9.2-1.3 0-1-.8-1.8-1.8-1.8zm11.6 0c-1 0-1.8.8-1.8 1.8 0 .5.1.9.2 1.3l.6 2.1c.3 1 1 1.4 2 1.3l2.3-.3c2.1-.3 3.7-2 3.7-4.1V9.6c0-.3-.3-.6-.6-.6z
+    M3.5 10.3h4.3v2.4H3.5z"/></g></svg>
+    <span class="bar-name">WASD</span>
+    <span class="bar-kicker">DESIGN</span>
+  </a>
+  <nav class="bar-nav" aria-label="Sections">
+    <a class="hide-sm" href="/docs/">Docs</a>
+    <a class="hide-sm here" href="/docs/design/">Design</a>
+    <a class="bar-cta" href="/">OPEN SIMULATOR &rarr;</a>
+  </nav>
+</div>
+
+<main id="main">
+
+  <!-- 01 ─────────────────────────────────────────────────────────── -->
+  <section>
+    <div class="kicker">01 / THE PHYSICS</div>
+    <h1>Design for added light</h1>
+    <p class="lede">A waveguide cannot draw. It can only add light to whatever the wearer is already looking at. Every rule below follows from that one fact, and every one of them is running live on this page: drag the ambient control and watch which examples survive.</p>
+    <p>The tiles are not illustrations. Each is composited with <code>mix-blend-mode: plus-lighter</code> over a frame shot on Ray-Ban Display glasses, at the opacity the same optics model in the simulator returns for the ambient level you have set. What dies here dies on the glasses.</p>
+
+    <div class="ambient">
+      <span class="amb-label" id="amb-label">Ambient</span>
+      <input type="range" id="amb" min="0" max="100" value="34"
+             aria-labelledby="amb-label" aria-describedby="amb-read">
+      <span class="amb-read" id="amb-read">1 000 lux</span>
+      <span class="amb-scene" id="amb-scene">overcast, outdoors</span>
+      <span class="amb-ratio" id="amb-ratio">4.1 : 1 usable</span>
+    </div>
+
+    <p class="note">DISPLAY HELD AT 1 000 NITS, the middle of the Meta Ray-Ban Display range. Ambient runs 50 lux (a dim room) to 30 000 lux (open sun). The ratio is (display + ambient) / ambient: usable above 3:1, marginal to 1.5:1, lost below.</p>
+  </section>
+
+  <!-- 02 ─────────────────────────────────────────────────────────── -->
+  <section id="rules">
+    <div class="kicker">02 / THE RULES</div>
+    <h2>Seven rules, each one falsifiable</h2>
+
+    <!-- 1 ────────────────────────────────────────────────────────── -->
+    <div class="rule-block">
+      <div class="rule-text">
+        <div class="rule-n"><span>RULE 01</span><span class="rule-src">WORN, THREE MONTHS</span></div>
+        <div class="rule-title">Black is a hole, not a colour</div>
+        <p class="rule-body">Pure black emits nothing, so it arrives as clear glass. The card you drew does not exist on the glasses: only the marks you lit up do. This is why a design that looks composed on a monitor arrives as loose text floating over traffic. Draw the container in a dark grey that still emits, or accept that there is no container.</p>
+        <a class="rule-check" href="/?url=%2Fdemos%2Fcontrast%2F&amp;ambient=9000&amp;bg=harbor&amp;fit=cover">CHECK IT IN THE SIMULATOR &#8599;</a>
+      </div>
+      <div class="demos two">
+        <div class="lab">
+          <div class="lab-view flat">
+            <div class="lab-hud">
+              <div class="r1-card"><span class="t">Gate 22</span><span class="s">Boarding 14:05</span></div>
+            </div>
+          </div>
+          <div class="lab-cap">On your monitor: <b>a card, on black</b></div>
+        </div>
+        <div class="lab">
+          <div class="lab-view" data-scene="harbor">
+            <div class="lab-hud">
+              <div class="r1-bare"><span class="t">Gate 22</span><span class="s">Boarding 14:05</span></div>
+            </div>
+          </div>
+          <div class="lab-cap">What arrives: <b>the card is gone</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 ────────────────────────────────────────────────────────── -->
+    <div class="rule-block">
+      <div class="rule-text">
+        <div class="rule-n"><span>RULE 02</span><span class="rule-src">GOOGLE, TRANSPARENT SCREENS</span></div>
+        <div class="rule-title">Measure type in degrees, not pixels</div>
+        <p class="rule-body">A pixel has no size on glasses. The panel floats about a metre away and subtends a fixed angle, so the only honest unit is how much of the wearer's vision a letter occupies. Roughly <strong>0.6 degrees is the floor for legibility</strong>, and anything you expect read at a glance, in motion, should sit well above it.</p>
+        <p class="rule-body">On Meta Ray-Ban Display that arithmetic is fixed: 20 degrees across a 600 pixel grid, so one degree is 30 authored pixels. The simulator prints the angle your current size works out to, live, next to the size slider.</p>
+        <a class="rule-check" href="/?url=%2Fdemos%2Fnav%2F&amp;size=240&amp;ambient=6000&amp;bg=street%20walk">CHECK IT IN THE SIMULATOR &#8599;</a>
+      </div>
+      <div class="demos three r2">
+        <div class="lab fails">
+          <div class="lab-view" data-scene="street-walk">
+            <div class="lab-hud">
+              <span class="r2-type" style="font-size:12px">400 ft</span>
+              <span class="r2-deg">0.4&deg; / 12 PX</span>
+            </div>
+          </div>
+          <div class="lab-cap">Below the floor: <b>unreadable in motion</b></div>
+        </div>
+        <div class="lab">
+          <div class="lab-view" data-scene="street-walk">
+            <div class="lab-hud">
+              <span class="r2-type" style="font-size:18px">400 ft</span>
+              <span class="r2-deg">0.6&deg; / 18 PX</span>
+            </div>
+          </div>
+          <div class="lab-cap">At the floor: <b>legible, not glanceable</b></div>
+        </div>
+        <div class="lab holds">
+          <div class="lab-view" data-scene="street-walk">
+            <div class="lab-hud">
+              <span class="r2-type" style="font-size:27px">400 ft</span>
+              <span class="r2-deg">0.9&deg; / 27 PX</span>
+            </div>
+          </div>
+          <div class="lab-cap">Where production text belongs: <b>read in one look</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 ────────────────────────────────────────────────────────── -->
+    <div class="rule-block">
+      <div class="rule-text">
+        <div class="rule-n"><span>RULE 03</span><span class="rule-src">THE OPTICS MODEL</span></div>
+        <div class="rule-title">Contrast belongs to the room, not to your design</div>
+        <p class="rule-body">On a monitor, contrast is a property of two colours you chose. Here it is a property of the light falling on the wearer's face, which you do not control and cannot predict. The same layout is crisp in a library and gone on a forecourt at noon.</p>
+        <p class="rule-body">So there is no such thing as a design that passes. There is only a design and the illuminance it stops working at. Find that number and decide whether you can live with it.</p>
+        <a class="rule-check" href="/?url=%2Fdemos%2Fcontrast%2F&amp;ambient=22000&amp;bg=highway&amp;fit=cover">CHECK IT IN THE SIMULATOR &#8599;</a>
+      </div>
+      <!-- One tile per contrast band, not three arbitrary lux values: past
+           about 1.9:1 the panel is already at the model's floor, so two
+           daylight levels would render identically and prove nothing. -->
+      <div class="demos three">
+        <div class="lab">
+          <div class="lab-view" data-scene="library" data-lux="200">
+            <div class="lab-hud"><div class="r7-one"><span class="big">12:40</span><span class="sub">LIBRARY</span></div></div>
+          </div>
+          <div class="lab-cap">200 lux: <b id="cap-200">16.7 : 1, usable</b></div>
+        </div>
+        <div class="lab">
+          <div class="lab-view" data-scene="promenade" data-lux="2200">
+            <div class="lab-hud"><div class="r7-one"><span class="big">12:40</span><span class="sub">SHADE</span></div></div>
+          </div>
+          <div class="lab-cap">2 200 lux: <b id="cap-2200">2.4 : 1, marginal</b></div>
+        </div>
+        <div class="lab">
+          <div class="lab-view" data-scene="highway" data-lux="9000">
+            <div class="lab-hud"><div class="r7-one"><span class="big">12:40</span><span class="sub">FORECOURT</span></div></div>
+          </div>
+          <div class="lab-cap">9 000 lux: <b id="cap-9000">1.3 : 1, lost</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 ────────────────────────────────────────────────────────── -->
+    <div class="rule-block">
+      <div class="rule-text">
+        <div class="rule-n"><span>RULE 04</span><span class="rule-src">GOOGLE + WORN</span></div>
+        <div class="rule-title">Desaturate, or lose the colour entirely</div>
+        <p class="rule-body">Saturated colour is dim colour: a pure red is one channel doing all the work, and one channel cannot out-shout daylight. Cyan, green and near white carry two or three channels, which is why they survive. Deep blue is the worst case on almost every combiner.</p>
+        <p class="rule-body">Which breaks the usual convention, because red is what you reach for to say <em>stop</em>. On glasses red says nothing at all outdoors. Carry the urgency with size, motion or position instead.</p>
+        <a class="rule-check" href="/?url=%2Fdemos%2Fcontrast%2F&amp;ambient=12000&amp;bg=promenade">CHECK IT IN THE SIMULATOR &#8599;</a>
+      </div>
+      <div class="demos two">
+        <div class="lab fails">
+          <div class="lab-view" data-scene="promenade">
+            <div class="lab-hud">
+              <div class="r4-swatches">
+                <span class="r4-chip" style="background:#e0342c;color:#fff">RED</span>
+                <span class="r4-chip" style="background:#1a2fd6;color:#fff">BLUE</span>
+                <span class="r4-chip" style="background:#8b1fb8;color:#fff">VIOLET</span>
+              </div>
+            </div>
+          </div>
+          <div class="lab-cap">One channel each: <b>first to go</b></div>
+        </div>
+        <div class="lab holds">
+          <div class="lab-view" data-scene="promenade">
+            <div class="lab-hud">
+              <div class="r4-swatches">
+                <span class="r4-chip" style="background:#5ee0ff;color:#04212b">CYAN</span>
+                <span class="r4-chip" style="background:#63e6a8;color:#06251a">GREEN</span>
+                <span class="r4-chip" style="background:#eaf3ff;color:#12181d">WHITE</span>
+              </div>
+            </div>
+          </div>
+          <div class="lab-cap">Two or three channels: <b>still there</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 ────────────────────────────────────────────────────────── -->
+    <div class="rule-block">
+      <div class="rule-text">
+        <div class="rule-n"><span>RULE 05</span><span class="rule-src">GOOGLE, TRANSPARENT SCREENS</span></div>
+        <div class="rule-title">Depth comes from dark, not from shadow</div>
+        <p class="rule-body">A drop shadow is a subtraction: it works by taking light away from what is behind it. An additive display has no way to take anything away, so a shadow is simply not rendered. Every elevation cue built on shadow is invisible here.</p>
+        <p class="rule-body">Build hierarchy the other way round. A dark but non-black surface with a brighter edge reads as a seat for content, and the difference between two levels becomes a difference in emitted light rather than in cast darkness.</p>
+      </div>
+      <div class="demos two">
+        <div class="lab fails">
+          <div class="lab-view" data-scene="lobby">
+            <div class="lab-hud"><div class="r5-shadow">Elevated on a shadow</div></div>
+          </div>
+          <div class="lab-cap">The shadow emits nothing: <b>no depth at all</b></div>
+        </div>
+        <div class="lab holds">
+          <div class="lab-view" data-scene="lobby">
+            <div class="lab-hud"><div class="r5-seat">Seated on dark</div></div>
+          </div>
+          <div class="lab-cap">A lit edge on a dark seat: <b>reads as a layer</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 ────────────────────────────────────────────────────────── -->
+    <div class="rule-block">
+      <div class="rule-text">
+        <div class="rule-n"><span>RULE 06</span><span class="rule-src">GOOGLE, TRANSPARENT SCREENS</span></div>
+        <div class="rule-title">Arrive slowly enough to be ignored</div>
+        <p class="rule-body">A notification on a phone competes with a screen the user is already looking at. A notification on glasses competes with the road. Anything that snaps into place pulls focus from the world whether or not it deserved to, and the wearer has to physically refocus about a metre out to answer it.</p>
+        <p class="rule-body">Let information arrive over roughly two seconds so it can be noticed and declined without a decision. Keep instant response for direct feedback only: a focus ring, a selection, anything the wearer just caused.</p>
+        <a class="rule-check" href="/?url=%2Fdemos%2Ftimer%2F&amp;bg=cooking&amp;ambient=800">CHECK IT IN THE SIMULATOR &#8599;</a>
+      </div>
+      <div class="demos two">
+        <div class="lab fails">
+          <div class="lab-view" data-scene="commute">
+            <div class="lab-hud"><div class="r6-toast r6-fast"><span class="dot"></span><span class="msg">Meeting moved to 3pm</span></div></div>
+          </div>
+          <div class="lab-cap">Snapped in: <b>takes attention</b></div>
+        </div>
+        <div class="lab holds">
+          <div class="lab-view" data-scene="commute">
+            <div class="lab-hud"><div class="r6-toast r6-slow"><span class="dot"></span><span class="msg">Meeting moved to 3pm</span></div></div>
+          </div>
+          <div class="lab-cap">Drifted in over two seconds: <b>earns it</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 ────────────────────────────────────────────────────────── -->
+    <div class="rule-block">
+      <div class="rule-text">
+        <div class="rule-n"><span>RULE 07</span><span class="rule-src">WORN, THREE MONTHS</span></div>
+        <div class="rule-title">One idea per glance</div>
+        <p class="rule-body">The real budget is not the 600 by 450 grid. It is about one second of attention, taken off-axis, usually while walking. Whatever cannot be understood in that second is not slow, it is absent.</p>
+        <p class="rule-body">In practice this means one number and one label. If a second idea genuinely has to be there, it belongs on the next screen, not the next line.</p>
+        <a class="rule-check" href="/?url=%2Fdemos%2Fnav%2F&amp;bg=city%20driving&amp;ambient=4000">CHECK IT IN THE SIMULATOR &#8599;</a>
+      </div>
+      <div class="demos two">
+        <div class="lab fails">
+          <div class="lab-view" data-scene="city-driving">
+            <div class="lab-hud">
+              <div class="r7-dense"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+          </div>
+          <div class="lab-cap">Nine things: <b>none of them read</b></div>
+        </div>
+        <div class="lab holds">
+          <div class="lab-view" data-scene="city-driving">
+            <div class="lab-hud">
+              <div class="r7-one"><span class="big">400 ft</span><span class="sub">CANYON RD</span></div>
+            </div>
+          </div>
+          <div class="lab-cap">One thing: <b>read without stopping</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="takeaway">If it does not survive the slider, it does not survive the pavement.</div>
+  </section>
+
+  <!-- 03 ─────────────────────────────────────────────────────────── -->
+  <section id="angles">
+    <div class="kicker">03 / THE CONVERSION</div>
+    <h2>Pixels to degrees, on this device</h2>
+    <p>Meta Ray-Ban Display puts a 600 by 450 grid across roughly 20 degrees of horizontal field of view. Every size you author converts at 30 pixels per degree. Other panels differ; the simulator computes it from whichever device profile is loaded and prints the result next to the size slider.</p>
+    <div class="conv">
+      <div><b>0.4&deg;</b>12 px, below the floor</div>
+      <div><b>0.6&deg;</b>18 px, the legibility floor</div>
+      <div><b>0.9&deg;</b>27 px, comfortable body text</div>
+      <div><b>1.5&deg;</b>45 px, a glanceable headline</div>
+    </div>
+    <p class="note">NOT MODELLED: rainbow fringing, eyebox falloff, focal distance, glare, and binocular rivalry. Verify spec-critical work on hardware.</p>
+  </section>
+
+  <!-- 04 ─────────────────────────────────────────────────────────── -->
+  <section id="agents">
+    <div class="kicker">04 / WHAT IS COMING</div>
+    <h2>Agent-generated surfaces obey the same physics</h2>
+    <p>Protocols like <a href="https://a2ui.org/" rel="noopener">A2UI</a> let an agent emit a user interface as declarative JSON, drawn by the client from a catalogue of approved components rather than by shipping code across a trust boundary. It is a good answer to a real security problem, and it is going to be how a lot of glasses content gets built, because an agent that can only return text cannot do much on a display.</p>
+    <p>The catch is that every component catalogue in circulation was designed for opaque screens. Cards with white surfaces, drop shadows for elevation, saturated status colours, body text sized in density-independent pixels: each of those is a rule above, broken by default. An agent picking sensibly from such a catalogue will produce something unreadable on a waveguide every time, and neither the agent nor the protocol has any way to know.</p>
+    <p>Rendering an A2UI surface additively over real footage, so a catalogue can be judged before it is adopted, is the next thing planned for WASD. Until then, the rules above are the checklist to hold a catalogue against.</p>
+    <div class="chips">
+      <a href="https://a2ui.org/" rel="noopener">A2UI PROTOCOL &#8599;</a>
+      <a href="https://design.google/library/transparent-screens" rel="noopener">GOOGLE: TRANSPARENT SCREENS &#8599;</a>
+    </div>
+  </section>
+
+  <!-- 05 ─────────────────────────────────────────────────────────── -->
+  <section id="sources">
+    <div class="kicker">05 / SOURCES</div>
+    <h2>Where these came from</h2>
+    <div class="sources">
+      <ul>
+        <li><strong>Google, <a href="https://design.google/library/transparent-screens" rel="noopener">Designing for transparent screens</a>.</strong> Rules 02, 05 and 06 are theirs: type measured in visual angle with a 0.6 degree floor, depth built from dark surfaces rather than shadow, and motion slow enough to earn attention rather than demand it. Rule 04 is half theirs. Worth reading in full; it is the best published account of this problem.</li>
+        <li><strong>Three months of daily wear.</strong> Rules 01, 03 and 07 come from building apps on Meta Ray-Ban Display and walking outside with them, which is also where the background footage on this page was shot.</li>
+        <li><strong>The optics model.</strong> The contrast ratio and the opacity every tile is drawn at come from <code>optics.js</code> in this repository, the same file the simulator uses. The physics is a diffuse-reflector approximation, documented in that file.</li>
+      </ul>
+    </div>
+    <p class="note">Corrections welcome. If a rule here does not match what you see on your own hardware, that is worth an issue on the repository.</p>
+    <div class="chips">
+      <a href="/docs/">BACK TO DOCS &#8599;</a>
+      <a href="/">OPEN THE SIMULATOR &#8599;</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <a href="/">Simulator</a>
+  <a href="/docs/">Docs</a>
+  <span>WASD: Web Apps Simulator for Display</span>
+</footer>
+
+</body>
+</html>

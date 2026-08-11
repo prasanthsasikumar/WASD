@@ -30,6 +30,9 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=5">
   <link rel="stylesheet" href="wasd.css">
   <script defer src="/vendor/qrcode.min.js"></script>
+  <!-- Before wasd.js: it reads the optics model from this file. defer keeps
+       the order. Shared with the design page under /docs/design/. -->
+  <script defer src="/optics.js"></script>
   <script defer src="wasd.js"></script>
   <script type="application/ld+json">
   {

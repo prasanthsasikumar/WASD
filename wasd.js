@@ -1104,19 +1104,11 @@
   slNits.step  = DEVICE.luminance.step;
   slNits.value = DEVICE.luminance.start;
 
-  // Ambient illuminance (lux) falling on a scene becomes luminance (nits)
-  // reflected back toward the eye. lux/π is that conversion for a perfect
-  // diffuse reflector; the waveguide adds its own light on top, so the
-  // contrast the wearer actually perceives is (display + ambient) / ambient.
-  function computeContrastRatio(nits, lux) {
-    const bgNits = lux / Math.PI;
-    return (nits + bgNits) / Math.max(bgNits, 0.01);
-  }
-
-  function computeHudOpacity(nits, lux) {
-    const contrast = computeContrastRatio(nits, lux);
-    return Math.max(0.3, Math.min(1.0, 1.0 - 1.0 / (contrast * 0.5 + 0.5)));
-  }
+  // The model itself lives in optics.js, loaded before this file, because the
+  // design page under docs/ demonstrates these rules and has to compute them
+  // identically. See that file for the physics.
+  const computeContrastRatio = WASDOptics.contrastRatio;
+  const computeHudOpacity    = WASDOptics.hudOpacity;
 
   function updateAngularReadout() {
     const angularW = (DEVICE.fovDeg * scaleRatio).toFixed(1);
