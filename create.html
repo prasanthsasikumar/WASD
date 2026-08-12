@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create - WASD</title>
+<meta name="description" content="Describe an app and see it on the glasses display seconds later. No repo, no deploy.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/create.css">
+<script defer src="/codec.js"></script>
+<script defer src="/create.js"></script>
+</head>
+<body>
+
+<header id="top">
+  <a class="brand" href="/">
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="#63e6a8" aria-hidden="true"><g transform="translate(2.692 1.499) scale(0.8462)"><path fill-rule="evenodd" d="
+    M1.9 6.9h20.2c1 0 1.9.8 1.9 1.9v2.6c0 3.2-2.4 5.8-5.6 6.2l-2.5.3c-2.1.2-3.7-.9-4.3-2.8l-.4-1.3c-.1-.3-.2-.5-.4-.5s-.3.2-.4.5l-.4 1.3c-.6 1.9-2.2 3-4.3 2.8l-2.5-.3C.4 17.2-2 14.6-2 11.4V8.8c0-1 .8-1.9 1.9-1.9z
+    M2.3 9c-.3 0-.6.3-.6.6v1.6c0 2.1 1.6 3.8 3.7 4.1l2.3.3c1 .1 1.7-.3 2-1.3l.6-2.1c.1-.4.2-.9.2-1.3 0-1-.8-1.8-1.8-1.8zm11.6 0c-1 0-1.8.8-1.8 1.8 0 .5.1.9.2 1.3l.6 2.1c.3 1 1 1.4 2 1.3l2.3-.3c2.1-.3 3.7-2 3.7-4.1V9.6c0-.3-.3-.6-.6-.6z
+    M3.5 10.3h4.3v2.4H3.5z"/></g></svg>
+    <span><strong>WASD</strong> CREATE</span>
+  </a>
+  <span class="tagline">Describe an app. See it in the lens.</span>
+</header>
+
+<main>
+  <section id="chat-col" aria-label="Conversation">
+    <div id="messages" aria-live="polite"></div>
+
+    <form id="composer">
+      <textarea id="prompt" rows="3" spellcheck="false"
+        placeholder="A pomodoro timer I can glance at while cooking"></textarea>
+      <button id="send" class="pill-btn" type="submit">Generate</button>
+    </form>
+
+    <div id="actions" hidden>
+      <button id="download" class="ghost-btn" type="button">Download HTML</button>
+      <button id="open-sim" class="ghost-btn" type="button">Open in simulator</button>
+      <button id="new-app" class="ghost-btn" type="button">New app</button>
+    </div>
+
+    <details id="settings">
+      <summary>Settings</summary>
+      <label for="byok">Your DeepSeek API key (optional)</label>
+      <input id="byok" type="password" autocomplete="off" spellcheck="false"
+             placeholder="sk-...">
+      <p class="hint">Stays in this browser only, and lifts the daily free
+      limit. Get one at platform.deepseek.com.</p>
+    </details>
+  </section>
+
+  <section id="preview-col" aria-label="Preview">
+    <div id="preview-strip">
+      <select id="scene" aria-label="Scene"></select>
+      <input type="range" id="ambient" min="50" max="30000" value="1000" step="50"
+             aria-label="Ambient illuminance">
+      <span id="ambient-lbl">1000 lux</span>
+    </div>
+    <iframe id="sim" src="/?embed=1" title="Simulator preview"></iframe>
+    <p class="hint">Click the preview, then use W A S D, Enter, and Escape
+    inside your app. Raise the slider to see it in daylight.</p>
+  </section>
+</main>
+
+</body>
+</html>
