@@ -159,14 +159,14 @@
     ];
   }
 
-  async function generate(instruction) {
+  async function generate(instruction, isRetry) {
     if (state.busy) return;
     state.busy = true;
     sendBtn.disabled = true;
 
     const isFirst = state.current < 0;
     if (isFirst) state.firstPrompt = instruction;
-    addMessage('user', instruction);
+    if (!isRetry) addMessage('user', instruction);
 
     const progress = addMessage('system', 'Generating…');
     const body = { messages: buildRequestMessages(instruction) };
@@ -185,7 +185,7 @@
         let err = { error: 'Something went wrong. Try again.' };
         try { err = await res.json(); } catch (e) {}
         progress.remove();
-        addErrorMessage(err.error, () => generate(instruction));
+        addErrorMessage(err.error, () => generate(instruction, true));
         return;
       }
 
@@ -199,7 +199,7 @@
       }
     } catch (e) {
       progress.remove();
-      addErrorMessage('The connection dropped mid-generation.', () => generate(instruction));
+      addErrorMessage('The connection dropped mid-generation.', () => generate(instruction, true));
       return;
     } finally {
       state.busy = false;
@@ -209,7 +209,7 @@
     const html = extractHTML(text);
     if (!html) {
       progress.remove();
-      addErrorMessage('The model returned something that is not an app.', () => generate(instruction));
+      addErrorMessage('The model returned something that is not an app.', () => generate(instruction, true));
       return;
     }
 
