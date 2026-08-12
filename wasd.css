@@ -711,6 +711,10 @@ body.fullscreen-sim.show-exit-btn #exit-fullscreen-btn,
 body.fullscreen-sim #exit-fullscreen-btn:hover { opacity: 1; pointer-events: auto; }
 #exit-fullscreen-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
 
+/* Embedded in the create page: the parent owns all chrome, so the exit
+   button that would restore the sidebar must never appear. */
+body.embed #exit-fullscreen-btn { display: none !important; }
+
 #stop-recording-btn {
   display: none; position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
   z-index: 500; align-items: center; gap: 9px; padding: 9px 18px; border-radius: 999px;

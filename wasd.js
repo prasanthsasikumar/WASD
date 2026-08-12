@@ -59,6 +59,12 @@
   const lblPosY       = document.getElementById('lbl-posy');
   const exitFsBtn     = document.getElementById('exit-fullscreen-btn');
 
+  // A generated app has no URL: the file itself is the state. Kept here so
+  // share, QR, and download know what is currently in the lens.
+  let generatedAppHTML = null;
+  let generatedAppParam = null;   // pre-compressed for the share URL
+  let generatedBlobURL = null;
+
   /* ── Analytics: no-op stub. Replace with your own analytics provider. ─ */
   function trackEvent(name, data) {
     // Replace with your analytics implementation, e.g.:
@@ -486,6 +492,8 @@
       return;
     }
     urlInput.value = url;
+    generatedAppHTML = null;
+    generatedAppParam = null;
 
     let frameResolved = false;
     let frameTimer;
@@ -548,6 +556,39 @@
     if (src === 'manual' || src === 'history') {
       addHistoryItem(url);
     }
+  }
+
+  /* ── Generated apps ────────────────────────────────────────────────
+     Inline HTML from the create page or an ?app= link. Loaded via a blob
+     URL rather than loadURL: there is no origin to normalize, no framing
+     policy to pre-flight, and it must not enter the URL history. The
+     iframe's sandbox (no allow-same-origin) keeps the code inert toward
+     wasd.tools even though the blob was minted here. ── */
+  function loadGeneratedHTML(html, source) {
+    generatedAppHTML = html;
+    generatedAppParam = null;
+    if (window.WASDCodec) {
+      window.WASDCodec.compress(html).then(s => { generatedAppParam = s; });
+    }
+    if (generatedBlobURL) URL.revokeObjectURL(generatedBlobURL);
+    generatedBlobURL = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    iframe.src = generatedBlobURL;
+    urlInput.value = '';
+    placeholder.hidden = true;
+    wrap.classList.remove('hidden');
+    wrap.classList.remove('show-placeholder');
+    hideLoadError();
+    openApp('web');
+    trackEvent('load-generated', { source: source || 'unknown', bytes: html.length });
+  }
+
+  function downloadGeneratedApp() {
+    if (!generatedAppHTML) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([generatedAppHTML], { type: 'text/html' }));
+    a.download = 'app.html';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 
   const LOAD_ERROR_DEFAULT = loadError.textContent;
@@ -1996,6 +2037,35 @@
   // at the configured value, not browser-default 1.0.
   scene.style.filter = `brightness(${(100 - slBgDark.value) / 100})`;
   lblBgDark.textContent = slBgDark.value + '%';
+
+  /* ── Embed mode and the create-page bridge ─────────────────────────
+     ?embed=1 is the simulator as a component: sidebar hidden, exit button
+     suppressed, driven by postMessage from a same-origin parent (the
+     create page). Same-origin only: the message carries HTML that will
+     execute (sandboxed) in the lens. ── */
+  window.addEventListener('message', e => {
+    if (e.origin !== location.origin) return;
+    const msg = e.data || {};
+    if (msg.type === 'wasd:load-html' && typeof msg.html === 'string') {
+      loadGeneratedHTML(msg.html, 'create');
+    } else if (msg.type === 'wasd:set-state') {
+      if (typeof msg.ambient === 'number' && isFinite(msg.ambient)) {
+        slAmbient.value = Math.max(50, Math.min(30000, Math.round(msg.ambient)));
+        applyHudBrightness();
+      }
+      if (typeof msg.bg === 'string') {
+        const idx = CLIPS.findIndex(c => c.name.toLowerCase() === msg.bg.toLowerCase());
+        if (idx >= 0) selectClip(idx);
+      }
+    }
+  });
+
+  const EMBED = new URLSearchParams(location.search).has('embed');
+  if (EMBED) {
+    document.body.classList.add('embed');
+    setFullscreenSim(true);
+  }
+
   readStateFromURL(); // restore shared state from URL params if present
 
   // Prefill last entered URL if nothing was loaded via deep link
