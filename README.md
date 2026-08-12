@@ -32,7 +32,7 @@ Raise the ambient level and watch the same design stop working:
 
 - **In-lens launcher.** The display runs a small keyboard-driven OS: six apps, moved through with W A S D or the arrows, ENTER to open, ESC for home.
 - **Any URL.** Load your own app into the Web App slot; it stays live and interactive inside the panel.
-- **Create in place.** Describe an app at [wasd.tools/create](https://wasd.tools/create) and it is generated straight into the lens: single file, tuned for additive optics, refinable by chat, shareable as a link that carries the whole app. Free tier included, or bring your own DeepSeek key.
+- **Create in place.** Describe an app at [wasd.tools/create](https://wasd.tools/create/) and it is generated straight into the lens: single file, tuned for additive optics, refinable by chat, shareable as a link that carries the whole app. Free tier included, or bring your own DeepSeek key.
 - **Real optics.** Display luminance (300 to 2000 nits) and ambient illuminance (50 to 30 000 lux) as separate quantities, with the additive contrast ratio they produce. Usable above 3:1, marginal down to 1.5:1, lost below that.
 - **20 scenes**, plus anything you drop in or link to, with darkness, blur, and a choice of filling the view or showing the whole frame as shot.
 - **Capture and record** in two framings: 16:9 point of view, or 1:1 like the glasses' own recorder.
@@ -40,7 +40,7 @@ Raise the ambient level and watch the same design stop working:
 
 ## Running it
 
-Static apart from one serverless function. No build step, no dependencies.
+Static apart from two serverless functions. The framing pre-flight works anywhere; the create page's generator needs a `DEEPSEEK_API_KEY` (and optionally Upstash for the free-tier counter) in the Vercel environment. No build step, no dependencies.
 
 ```bash
 python3 -m http.server 8000

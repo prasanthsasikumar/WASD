@@ -1414,9 +1414,13 @@
       // Unlike ?url=, this auto-loads: the payload is inline and runs only
       // inside the sandboxed iframe, so there is no drive-by framing of a
       // third-party site to guard against.
-      window.WASDCodec.decompress(p.get('app'))
-        .then(html => loadGeneratedHTML(html, 'link'))
-        .catch(() => showLoadError('The app in this link could not be decoded.'));
+      if (window.WASDCodec) {
+        window.WASDCodec.decompress(p.get('app'))
+          .then(html => loadGeneratedHTML(html, 'link'))
+          .catch(() => showLoadError('The app in this link could not be decoded.'));
+      } else {
+        showLoadError('The app in this link could not be decoded.');
+      }
     }
 
     // Shared links always open in fullscreen sim mode.

@@ -29,7 +29,7 @@
 
   const state = {
     firstPrompt: null,   // the prompt that started this app
-    revisions: [],       // [{html, note}] in order
+    revisions: [],       // [{html}] in order
     current: -1,         // index into revisions shown in the lens
     busy: false,
     simReady: false
@@ -146,7 +146,8 @@
     const start = text.search(/<!doctype\s|<html[\s>]/i);
     if (start === -1) return null;
     const endTag = text.toLowerCase().lastIndexOf('</html>');
-    const end = endTag === -1 ? text.length : endTag + '</html>'.length;
+    if (endTag === -1) return null;
+    const end = endTag + '</html>'.length;
     return text.slice(start, end).trim();
   }
 
@@ -170,7 +171,8 @@
 
     const progress = addMessage('system', 'Generating…');
     const body = { messages: buildRequestMessages(instruction) };
-    const key = localStorage.getItem(BYOK_KEY);
+    let key = null;
+    try { key = localStorage.getItem(BYOK_KEY); } catch (e) {}
     if (key) body.key = key;
 
     let text = '';
@@ -228,6 +230,7 @@
 
   composer.addEventListener('submit', e => {
     e.preventDefault();
+    if (state.busy) return;
     const value = promptEl.value.trim();
     if (!value) return;
     promptEl.value = '';
