@@ -40,7 +40,7 @@ Raise the ambient level and watch the same design stop working:
 
 ## Running it
 
-Static apart from two serverless functions. The framing pre-flight works anywhere; the create page's generator needs a `DEEPSEEK_API_KEY` (and optionally Upstash for the free-tier counter) in the Vercel environment. No build step, no dependencies.
+Static apart from two serverless functions: the framing pre-flight (see below) and the create page's generator, which needs a `DEEPSEEK_API_KEY` (and optionally Upstash for the free-tier counter) in the Vercel environment. No build step, no dependencies.
 
 ```bash
 python3 -m http.server 8000
