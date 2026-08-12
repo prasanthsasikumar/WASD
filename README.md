@@ -32,6 +32,7 @@ Raise the ambient level and watch the same design stop working:
 
 - **In-lens launcher.** The display runs a small keyboard-driven OS: six apps, moved through with W A S D or the arrows, ENTER to open, ESC for home.
 - **Any URL.** Load your own app into the Web App slot; it stays live and interactive inside the panel.
+- **Create in place.** Describe an app at [wasd.tools/create](https://wasd.tools/create) and it is generated straight into the lens: single file, tuned for additive optics, refinable by chat, shareable as a link that carries the whole app. Free tier included, or bring your own DeepSeek key.
 - **Real optics.** Display luminance (300 to 2000 nits) and ambient illuminance (50 to 30 000 lux) as separate quantities, with the additive contrast ratio they produce. Usable above 3:1, marginal down to 1.5:1, lost below that.
 - **20 scenes**, plus anything you drop in or link to, with darkness, blur, and a choice of filling the view or showing the whole frame as shot.
 - **Capture and record** in two framings: 16:9 point of view, or 1:1 like the glasses' own recorder.
@@ -54,7 +55,10 @@ The framing pre-flight (`api/can-frame.js`) needs Vercel. Without it the app sim
 index.html    Shell: stage on the left, control panel on the right
 wasd.css      Tokens and component styles
 wasd.js       Device profiles, optics, launcher, capture, deep links
-api/          Serverless: the framing pre-flight
+create.html   Describe an app, see it in the lens, refine by chat
+create.js     Generation client, revisions, simulator bridge
+codec.js      gzip + base64url codec for apps that travel inside links
+api/          Serverless: framing pre-flight, DeepSeek generator
 demos/        Self-hosted demo apps
 background/   Scene clips and their poster frames
 docs/         Single-page documentation

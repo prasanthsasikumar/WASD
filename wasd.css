@@ -409,6 +409,7 @@ summary.nav-group-label:focus-visible { outline: 2px solid var(--accent); outlin
 }
 .link-btn:hover { color: var(--accent); }
 .link-btn[hidden] { display: none; }
+a.link-btn { display: inline-block; text-decoration: none; }
 
 /* Playlist */
 #playlist { display: flex; flex-direction: column; gap: 6px; }
