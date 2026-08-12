@@ -1323,7 +1323,12 @@
   function buildShareURL() {
     const p = new URLSearchParams();
     const appUrl = urlInput.value.trim();
-    if (appUrl) p.set('url', appUrl);
+    if (generatedAppHTML && generatedAppParam) {
+      // The app itself travels in the link; no hosting ever existed.
+      p.set('app', generatedAppParam);
+    } else if (appUrl) {
+      p.set('url', appUrl);
+    }
     // Only when it is not the default, so ordinary links stay short.
     if (DEVICE !== DEVICES[DEFAULT_DEVICE]) p.set('device', requestedDevice);
     p.set('x', dispX);
@@ -1404,6 +1409,14 @@
       // framing of arbitrary URLs from shared links. User must click Load.
       urlInput.value = p.get('url');
       // Don't call loadURL here; the user confirms the framing.
+    }
+    if (p.has('app')) {
+      // Unlike ?url=, this auto-loads: the payload is inline and runs only
+      // inside the sandboxed iframe, so there is no drive-by framing of a
+      // third-party site to guard against.
+      window.WASDCodec.decompress(p.get('app'))
+        .then(html => loadGeneratedHTML(html, 'link'))
+        .catch(() => showLoadError('The app in this link could not be decoded.'));
     }
 
     // Shared links always open in fullscreen sim mode.
@@ -1497,6 +1510,30 @@
       b.classList.toggle('active', active);
       b.setAttribute('aria-checked', String(active));
     });
+
+    if (generatedAppHTML) {
+      // A generated app has no hosted URL for the glasses to open, and the
+      // share payload usually exceeds what a camera-readable QR carries
+      // (about 2 KB at low error correction).
+      qrInstrGlasses.hidden = true;
+      qrInstrSim.hidden = true;
+      qrInstrWrap.hidden = true;
+      const shareUrl = generatedAppParam ? buildShareURL() : null;
+      if (mode === 'simulator' && shareUrl && shareUrl.length <= 2000) {
+        renderQRCode(shareUrl);
+        qrInstrSim.hidden = false;
+        qrInstrWrap.hidden = false;
+      } else {
+        qrOutput.innerHTML =
+          '<p class="qr-no-url">A generated app lives in this browser, not at a URL, ' +
+          'so a QR code cannot carry it to the glasses. Download the file, host it ' +
+          'anywhere, and load that URL here instead.</p>' +
+          '<button id="qr-download-app" class="pill-btn" type="button">Download app.html</button>';
+        document.getElementById('qr-download-app')
+          .addEventListener('click', downloadGeneratedApp);
+      }
+      return;
+    }
 
     const appUrl = urlInput.value.trim();
     // Both instructions describe scanning a code that isn't there; hide the
